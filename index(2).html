@@ -1,0 +1,2723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Med Hub</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2f6f62">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f7f6;
+    --panel: #ffffff;
+    --border: #dce3e0;
+    --text: #1b2421;
+    --muted: #5c6b66;
+    --accent: #2f6f62;
+    --accent-dark: #234f45;
+    --accent-soft: #e4efec;
+    --warn: #b5542b;
+    --warn-soft: #f5e6df;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #141816;
+      --panel: #1b211f;
+      --border: #2c3532;
+      --text: #eaf0ee;
+      --muted: #9aa8a3;
+      --accent: #6fbfa8;
+      --accent-dark: #8fd4c0;
+      --accent-soft: #21322c;
+      --warn: #e2946e;
+      --warn-soft: #33241d;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141816;
+    --panel: #1b211f;
+    --border: #2c3532;
+    --text: #eaf0ee;
+    --muted: #9aa8a3;
+    --accent: #6fbfa8;
+    --accent-dark: #8fd4c0;
+    --accent-soft: #21322c;
+    --warn: #e2946e;
+    --warn-soft: #33241d;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.55;
+  }
+  h1, h2, h3 { font-family: 'Newsreader', Georgia, serif; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 0.4em; }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.4rem; }
+  h3 { font-size: 1.1rem; }
+  p { margin: 0 0 1em; color: var(--text); }
+  a { color: var(--accent-dark); }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px; background: var(--panel); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .brand { font-family: 'Newsreader', serif; font-weight: 600; font-size: 1.15rem; color: var(--accent-dark); }
+  .tabs { display: flex; gap: 4px; }
+  .tab-btn {
+    background: none; border: none; padding: 8px 14px; border-radius: 8px;
+    font-family: inherit; font-size: 0.92rem; color: var(--muted); cursor: pointer;
+    font-weight: 500;
+  }
+  .tab-btn:hover { background: var(--accent-soft); color: var(--text); }
+  .tab-btn.active { background: var(--accent); color: #fff; }
+  .tab-btn .ti { margin-right: 5px; }
+  @media (max-width: 600px) { .tab-btn .ti { margin-right: 0; } }
+
+  .container { max-width: 760px; margin: 0 auto; padding: 32px 24px 80px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px; margin-bottom: 20px;
+  }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 18px 0; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px; cursor: pointer;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card .kicker { color: var(--muted); font-size: 0.85rem; margin-bottom: 4px; }
+
+  .hero { padding: 8px 0 20px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .hero p { color: var(--muted); max-width: 46ch; }
+
+  label { display: block; font-size: 0.88rem; color: var(--muted); margin: 12px 0 4px; }
+  input, textarea {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg); color: var(--text); font-family: inherit; font-size: 0.95rem;
+  }
+  input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  textarea { resize: vertical; min-height: 70px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  button.primary, label.primary {
+    background: var(--accent); color: #fff; border: none; border-radius: 8px;
+    padding: 10px 18px; font-family: inherit; font-weight: 600; font-size: 0.95rem;
+    cursor: pointer; margin-top: 16px;
+  }
+  button.primary:hover, label.primary:hover { background: var(--accent-dark); }
+  label.primary { display: inline-block; text-align: center; }
+  button.ghost {
+    background: none; border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 9px 16px; font-family: inherit; cursor: pointer; font-size: 0.9rem;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; font-size: 0.82rem; }
+  .out-of-range { color: var(--warn); font-weight: 600; }
+  .empty-state { color: var(--muted); padding: 20px 0; text-align: center; }
+
+
+  .glossary dt { font-weight: 600; margin-top: 12px; }
+  .glossary dd { margin: 2px 0 0; color: var(--muted); }
+
+  .post-item { padding: 14px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .post-item:last-child { border-bottom: none; }
+
+  .dir-group h4 { margin: 26px 0 2px; font-family: 'Newsreader', serif; font-weight: 600; font-size: 1rem; }
+  .dir-group:first-child h4 { margin-top: 0; }
+  .dir-item { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+  .dir-item:last-child { border-bottom: none; }
+  .dir-info .dir-name { font-weight: 600; }
+  .dir-info .dir-sub { color: var(--muted); font-size: 0.85rem; margin-top: 1px; }
+  .dir-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  @media (max-width: 520px) { .dir-item { flex-wrap: wrap; } .dir-actions { flex-shrink: 1; justify-content: flex-start; } }
+  [id$="-list-wrap"], #log-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  @media (max-width: 600px) {
+    .topbar { flex-wrap: wrap; gap: 8px; padding: 12px 16px; }
+    .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; width: 100%; }
+    .tab-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; font-size: 0.78rem; line-height: 1.15; text-align: center; }
+    .tab-btn .ti { font-size: 1.25rem; line-height: 1; }
+  }
+  .dir-actions a {
+    display: inline-flex; align-items: center; gap: 5px; background: var(--accent-soft); color: var(--accent-dark);
+    border-radius: 10px; padding: 10px 14px; min-height: 44px; font-size: 0.98rem; font-weight: 600; text-decoration: none; white-space: nowrap;
+  }
+  .dir-actions a:hover { background: var(--accent); color: #fff; }
+  .post-item .meta { color: var(--muted); font-size: 0.85rem; }
+  .comment { padding: 10px 0; border-top: 1px solid var(--border); }
+  .comment .meta { color: var(--muted); font-size: 0.82rem; margin-bottom: 3px; }
+
+  .back-link { display: inline-block; margin-bottom: 14px; color: var(--muted); text-decoration: none; font-size: 0.9rem; cursor: pointer; }
+  .back-link:hover { color: var(--accent-dark); }
+
+  .type-tag {
+    display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 2px 8px;
+    border-radius: 20px; background: var(--accent-soft); color: var(--accent-dark); margin-bottom: 8px;
+  }
+  .disclaimer { font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 14px; margin-top: 24px; }
+
+  ::-webkit-scrollbar { height: 8px; width: 8px; }
+
+  #print-area { display: none; }
+  @media print {
+    body > *:not(#print-area) { display: none !important; }
+    #print-area {
+      display: block !important; padding: 0; color: #000; background: #fff;
+    }
+    #print-area h1 { font-family: 'Newsreader', serif; font-size: 1.4rem; margin-bottom: 2px; }
+    #print-area .print-meta { font-size: 0.9rem; color: #444; margin-bottom: 18px; }
+    #print-area .print-item { padding: 8px 0; border-bottom: 1px solid #ccc; font-size: 1rem; display: flex; gap: 10px; }
+    #print-area .print-box { font-size: 1.1rem; line-height: 1; }
+  }
+  /* record cards + editor */
+  .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+  .sec-head h3 { margin: 0; }
+  .sec-desc { color: var(--muted); font-size: 0.88rem; margin: 2px 0 12px; }
+  .add-btn { background: var(--accent-soft); color: var(--accent-dark, var(--accent)); border: 1px solid transparent; border-radius: 999px; padding: 7px 14px; font: inherit; font-weight: 600; font-size: 0.88rem; cursor: pointer; white-space: nowrap; }
+  .add-btn:hover { border-color: var(--accent); }
+  .add-btn:focus-visible, .rec-edit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .rec-list .empty-state { padding: 14px 0 4px; }
+  .rec-card { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+  .rec-card:last-child { border-bottom: none; }
+  .rec-card.dim { opacity: 0.6; }
+  .rec-main { min-width: 0; flex: 1; }
+  .rec-title { font-weight: 600; overflow-wrap: anywhere; }
+  .rec-sub { color: var(--muted); font-size: 0.86rem; margin-top: 2px; overflow-wrap: anywhere; }
+  .rec-lines { font-size: 0.86rem; margin-top: 6px; line-height: 1.5; }
+  .rec-lines div { overflow-wrap: anywhere; }
+  .rec-pre { white-space: pre-line; }
+  .lab-wrap { overflow-x: auto; margin-top: 8px; }
+  details.fold > summary { cursor: pointer; font-family: 'Newsreader', Georgia, serif; font-weight: 600; font-size: 1.08rem; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  details.fold > summary::-webkit-details-marker { display: none; }
+  details.fold > summary::after { content: '▾'; color: var(--accent); font-size: 1rem; }
+  details.fold[open] > summary::after { content: '▴'; }
+  details.fold[open] > summary { margin-bottom: 12px; }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .cal-nav { font-size: 1.3rem; line-height: 1; padding: 4px 14px; }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.78rem; color: var(--muted); margin-bottom: 8px; }
+  .cal-legend i { display: inline-block; margin-right: 5px; vertical-align: 1px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .dot.appt { background: var(--accent); } .dot.lab { background: #7a6bb0; } .dot.refill { background: var(--warn); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-grid .dow { text-align: center; font-size: 0.72rem; color: var(--muted); padding: 2px 0; }
+  .cal-cell { min-height: 44px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); padding: 3px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; font: inherit; color: inherit; }
+  .cal-cell.blank { border: 0; background: none; cursor: default; }
+  .cal-cell .n { font-size: 0.82rem; }
+  .cal-cell .dots { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
+  .cal-cell.today { border-color: var(--accent); border-width: 2px; }
+  .cal-cell.sel { background: var(--accent-soft); }
+  .cal-day { margin-top: 10px; font-size: 0.9rem; }
+  .cal-day .item { padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .lab-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  .lab-table th { text-align: left; font-weight: 600; color: var(--muted); font-size: 0.76rem; padding: 4px 8px 4px 0; border-bottom: 1px solid var(--border, rgba(0,0,0,.12)); }
+  .lab-table td { padding: 5px 8px 5px 0; border-bottom: 1px solid var(--border, rgba(0,0,0,.08)); vertical-align: top; }
+  .lab-table tr.flagged td { color: var(--warn); font-weight: 600; }
+  .lab-extra { margin-top: 8px; font-size: 0.88rem; }
+  .lab-extra summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+  .view-pdf { margin-top: 10px; }
+  #pdf-viewer { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.85); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); }
+  #pdf-viewer .pv-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; color: #fff; }
+  #pdf-viewer .pv-bar button { background: #fff; color: #222; border: 0; border-radius: 8px; padding: 8px 14px; font-weight: 600; }
+  #pdf-viewer .pv-pages { overflow: auto; flex: 1; padding: 0 10px 30px; }
+  #pdf-viewer canvas { display: block; width: 100%; max-width: 900px; margin: 0 auto 12px; background: #fff; border-radius: 4px; }
+  .rec-flag { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); margin-left: 6px; vertical-align: 1px; }
+  .rec-tag { display: inline-block; font-size: 0.75rem; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--text); margin-left: 6px; vertical-align: 1px; }
+  .rec-vals { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; font-size: 0.9rem; }
+  .rec-vals .out-of-range { color: var(--warn); font-weight: 600; }
+  .rec-side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+  .rec-side .dir-actions { justify-content: flex-end; }
+  .rec-edit { background: none; border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 8px 14px; min-height: 40px; font: inherit; font-size: 0.92rem; cursor: pointer; }
+  .rec-edit:hover { border-color: var(--accent); }
+  .rec-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .rec-del { background: none; border: 1px solid var(--border); color: var(--warn); border-radius: 10px; padding: 8px 14px; min-height: 40px; font: inherit; font-size: 0.92rem; cursor: pointer; }
+  .rec-del:hover { border-color: var(--warn); background: var(--warn-soft); }
+  .rec-more { font-size: 0.82rem; color: var(--accent); background: none; border: none; padding: 4px 0 0; cursor: pointer; font: inherit; font-size: 0.82rem; text-decoration: underline; }
+  @media (max-width: 520px) {
+    .rec-card.has-actions { flex-wrap: wrap; }
+    .rec-card:not(.has-actions) .rec-side { flex-direction: column; width: auto; }
+    .rec-card.has-actions .rec-side { flex-direction: row-reverse; align-items: center; justify-content: space-between; width: 100%; }
+    .rec-side .dir-actions { justify-content: flex-start; }
+  }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 20, 0.45); z-index: 50; display: flex; align-items: flex-end; justify-content: center; padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .modal-overlay[hidden] { display: none; }
+  #edit-fields [hidden] { display: none !important; }
+  .modal { background: var(--panel); border-radius: 14px; width: 100%; max-width: 560px; max-height: 88vh; max-height: 88dvh; overflow-y: auto; padding: 20px 20px 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
+  @media (min-width: 640px) { .modal-overlay { align-items: center; } }
+  .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  .edit-grid .wide { grid-column: 1 / -1; }
+  .edit-grid .edit-section { grid-column: 1 / -1; margin: 16px 0 0; font-weight: 600; font-size: 0.92rem; }
+  @media (max-width: 520px) { .edit-grid { grid-template-columns: 1fr; } }
+  .edit-grid select, .edit-grid input, .edit-grid textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-family: inherit; font-size: 1rem; }
+  .edit-grid label.check { display: flex; align-items: center; gap: 8px; color: var(--text); margin-top: 16px; }
+  .edit-grid label.check input { width: auto; margin: 0; }
+  .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; position: sticky; bottom: -16px; background: var(--panel); padding: 12px 0 4px; border-top: 1px solid var(--border); }
+  .danger-btn { margin-left: auto; background: none; border: 1px solid var(--warn); color: var(--warn); border-radius: 8px; padding: 9px 14px; font: inherit; font-size: 0.9rem; cursor: pointer; }
+  .danger-btn:hover { background: var(--warn-soft); }
+  body.modal-open { overflow: hidden; }
+  .list-toggle { display: block; width: 100%; margin-top: 10px; padding: 10px; background: none; border: 1px dashed var(--border); border-radius: 8px; color: var(--accent); font: inherit; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+  .list-toggle:hover { border-color: var(--accent); }
+</style>
+</head>
+
+<body>
+
+<div id="print-area"></div>
+
+<div id="lock-overlay" style="position:fixed;inset:0;z-index:1000;background:var(--bg);display:none;align-items:center;justify-content:center;padding:24px;">
+  <div style="max-width:360px;width:100%;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;text-align:center;">
+    <div class="brand" style="margin-bottom:4px">My Med Hub</div>
+    <h2 id="lock-title" style="margin-bottom:6px">Enter PIN</h2>
+    <p id="lock-subtitle" style="color:var(--muted);font-size:0.88rem;margin-bottom:18px">This app is locked on this device.</p>
+    <input type="password" id="lock-pin-input" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="PIN" autocomplete="off" style="text-align:center;font-size:1.3rem;letter-spacing:0.3em;margin-bottom:10px">
+    <input type="password" id="lock-pin-confirm" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="Confirm PIN" autocomplete="off" style="display:none;text-align:center;font-size:1.3rem;letter-spacing:0.3em;margin-bottom:10px">
+    <div id="lock-error" style="color:var(--warn);font-size:0.85rem;min-height:1.2em;margin-bottom:8px"></div>
+    <button type="button" class="primary" id="lock-submit-btn" style="width:100%;margin-top:4px">Unlock</button>
+    <p id="lock-forgot" style="margin-top:16px;font-size:0.82rem;color:var(--muted);cursor:pointer;text-decoration:underline;display:none">Forgot PIN? Reset all app data</p>
+    <p style="margin-top:18px;font-size:0.75rem;color:var(--muted)">This PIN only hides the app screen on this device — it isn't encryption. Someone with deeper access to this browser could still see the stored data underneath.</p>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="brand">My Med Hub</div>
+  <div class="tabs">
+    <button class="tab-btn active" data-view="home"><span class="ti">🏠</span><span class="tl">Home</span></button>
+    <button class="tab-btn" data-view="tracker"><span class="ti">📋</span><span class="tl">My Health</span></button>
+    <button class="tab-btn" data-view="careteam"><span class="ti">👩‍⚕️</span><span class="tl">Care Team</span></button>
+    <button class="tab-btn" data-view="support"><span class="ti">🤝</span><span class="tl">Support</span></button>
+    <button class="tab-btn" data-view="directory"><span class="ti">📇</span><span class="tl">Directory</span></button>
+    <button class="tab-btn" data-view="community"><span class="ti">📝</span><span class="tl">My Notes</span></button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- HOME -->
+  <div class="view active" id="view-home">
+    <div class="hero">
+      <h1>Your labs, meds, and care team in one place.</h1>
+      <p>Share a lab report from Labcorp and it's saved here with the original. Keep track of medications, appointments, doctors, and questions for your next visit. Everything stays on this phone.</p>
+    </div>
+    <div class="panel">
+      <h3 style="margin-bottom:6px">Today</h3>
+      <div id="due-today-wrap"><div class="empty-state">No medications tracked yet.</div></div>
+    </div>
+    <div class="panel" id="cal-panel">
+      <div class="cal-head">
+        <button type="button" class="ghost cal-nav" data-cal="-1" aria-label="Previous month">‹</button>
+        <h3 id="cal-title" style="margin:0"></h3>
+        <button type="button" class="ghost cal-nav" data-cal="1" aria-label="Next month">›</button>
+      </div>
+      <div class="cal-legend"><span><i class="dot appt"></i>Appointment</span><span><i class="dot lab"></i>Lab / test</span><span><i class="dot refill"></i>Refill due</span></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div id="cal-day" class="cal-day"></div>
+      <button type="button" class="ghost" id="cal-add-appt" style="margin-top:10px">+ Add appointment</button>
+    </div>
+    <div class="panel" style="padding-top:14px;padding-bottom:14px">
+      <div id="recent-results-wrap"></div>
+    </div>
+    <div class="panel" id="labpdf-panel">
+      <h3 style="margin-bottom:6px">Add a lab report</h3>
+      <p style="color:var(--muted);margin-bottom:14px;font-size:0.88rem">Got results from Labcorp, Quest, or your doctor as a PDF? In the Labcorp app, tap Share and pick My Med Hub, or save the PDF and pick it here. The whole report and the original are saved, and your blood counts go on your chart automatically.</p>
+      <label for="labpdf-input" class="primary" role="button" tabindex="0" style="display:inline-block;cursor:pointer;margin:0">Choose lab report PDF</label>
+      <input type="file" id="labpdf-input" accept="application/pdf,.pdf" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none">
+      <div id="labpdf-status" style="margin-top:10px;font-size:0.88rem;color:var(--muted)"></div>
+      <details style="margin-top:12px;font-size:0.9rem">
+        <summary style="cursor:pointer;color:var(--accent);font-weight:600">How do I save the PDF to my phone?</summary>
+        <div style="margin-top:10px;line-height:1.55">
+          <p style="margin:0 0 6px;font-weight:600">If it came in an email (Gmail)</p>
+          <ol style="margin:0 0 12px;padding-left:20px">
+            <li>Open the email and scroll down to the PDF attachment at the bottom.</li>
+            <li>Tap the <strong>download arrow</strong> on the attachment (not the attachment itself). It saves to your Downloads folder.</li>
+            <li>Come back here, tap <strong>Choose lab report PDF</strong>, tap <strong>Files</strong>, and pick it from <strong>Downloads</strong>.</li>
+          </ol>
+          <p style="margin:0 0 6px;font-weight:600">If it's in the Labcorp app</p>
+          <ol style="margin:0 0 12px;padding-left:20px">
+            <li>Open the result and tap the <strong>download</strong> or <strong>share</strong> icon.</li>
+            <li>If you see <strong>Download</strong>, tap it and it saves to Downloads. If you only see a share list, choose <strong>Save to Files</strong> (or <strong>Files by Google</strong>) and pick <strong>Downloads</strong>.</li>
+            <li>Come back here and pick the file the same way.</li>
+          </ol>
+          <p style="margin:0;color:var(--muted)">No PDF, just text in the email? Copy the text and paste it in <strong>Add from email</strong> below.</p>
+        </div>
+      </details>
+    </div>
+    <details class="panel fold">
+      <summary>Add from email (paste the text)</summary>
+      <p style="color:var(--muted);margin-bottom:14px;font-size:0.88rem">If something only ever reaches you by email — a result, a doctor's after-visit note, a report — paste the text here instead of retyping it. It's filed with today's date into the right place automatically.</p>
+      <form id="email-result-form">
+        <label>What kind of entry is this</label>
+        <select id="er-category">
+          <option value="test">Test result / report (lab, imaging, pathology)</option>
+          <option value="visit">Doctor / visit note</option>
+        </select>
+        <div class="field-row">
+          <div><label id="er-subject-label">What is this</label><input type="text" id="er-subject" placeholder="e.g. CBC results, CT report" required></div>
+          <div><label>Date</label><input type="date" id="er-date" required></div>
+        </div>
+        <div class="field-row">
+          <div id="er-type-field"><label>Type</label>
+            <select id="er-type">
+              <option value="">—</option>
+              <option>Lab / bloodwork</option>
+              <option>X-ray</option>
+              <option>CT scan</option>
+              <option>MRI</option>
+              <option>PET scan</option>
+              <option>Ultrasound</option>
+              
+              <option>Pathology / biopsy</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div><label id="er-provider-label">Ordered by</label><input type="text" id="er-provider" list="doctor-names" placeholder="Type or pick a saved provider"></div>
+        </div>
+        <label id="er-content-label">Paste the email content here</label>
+        <textarea id="er-content" placeholder="Paste the result text from the email" style="min-height:110px" required></textarea>
+        <button type="submit" class="primary">Save</button>
+      </form>
+    </details>
+    <div class="panel" id="mychart-import-panel">
+      <h3 style="margin-bottom:6px">Import from MyChart</h3>
+      <p style="color:var(--muted);margin-bottom:14px;font-size:0.88rem">In MyChart, download your health summary (it saves as a .zip file), then pick that file here. Your allergies, conditions, medications, lab results, doctors, visits and insurance are read on this phone and added to the app. Your records stay on this device.</p>
+      <label for="mychart-file-input" class="primary" id="mychart-pick-btn" role="button" tabindex="0" style="display:inline-block;cursor:pointer;margin:0">Choose MyChart file</label>
+      <input type="file" id="mychart-file-input" accept=".zip,.xml,application/zip,application/x-zip-compressed,text/xml,application/xml,*/*" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none">
+      <div id="mychart-status" style="margin-top:10px;font-size:0.88rem;color:var(--muted)"></div>
+      <div id="mychart-preview" style="display:none;margin-top:12px">
+        <p style="margin-bottom:8px;font-size:0.9rem">Here's what was found. Uncheck anything you don't want, then add it.</p>
+        <div id="mychart-preview-list"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+          <button type="button" class="primary" id="mychart-add-btn">Add to My Med Hub</button>
+          <button type="button" class="ghost" id="mychart-cancel-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <details class="panel fold settings-fold">
+      <summary>⚙️ Settings: backup &amp; PIN lock</summary>
+    <div class="panel" style="margin-top:12px">
+      <h3 style="margin-bottom:6px">Data &amp; backup</h3>
+      <p style="color:var(--muted);margin-bottom:14px">Everything you enter is stored only in this browser. Download a backup periodically, or if you're moving to a new device — you can restore it here or in a fresh copy of this app.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <button type="button" class="ghost" id="backup-download-btn">Download my data</button>
+        <button type="button" class="ghost" id="backup-restore-btn">Restore from backup</button>
+        <input type="file" id="backup-file-input" accept="application/json" style="display:none">
+      </div>
+      <div id="backup-status" style="margin-top:10px;font-size:0.85rem;color:var(--muted)"></div>
+    </div>
+    <div class="panel" style="margin-top:12px">
+      <h3 style="margin-bottom:6px">PIN lock</h3>
+      <p style="color:var(--muted);margin-bottom:14px">Adds a PIN screen before this app opens on this device. This is a privacy screen, not encryption — the underlying data in this browser isn't scrambled, so it mainly stops casual glances, not someone with real access to the device.</p>
+      <div id="pin-status-line" style="font-size:0.88rem;margin-bottom:12px;color:var(--muted)">No PIN set.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <button type="button" class="ghost" id="pin-setup-btn">Set a PIN</button>
+        <button type="button" class="ghost" id="pin-remove-btn" style="display:none">Remove PIN</button>
+        <button type="button" class="ghost" id="pin-lock-now-btn" style="display:none">Lock now</button>
+      </div>
+    </div>
+    </details>
+  </div>
+
+  <!-- TRACKER -->
+  <div class="view" id="view-tracker">
+    <h2>My Health</h2>
+
+    <div class="panel">
+      <div class="sec-head"><h3>Allergies</h3><button type="button" class="add-btn" data-add="allergies">+ Add</button></div>
+      <p class="sec-desc">Medicines, foods, or anything else you react to. Worth having handy at every visit and in an emergency.</p>
+      <div class="rec-list" id="list-allergies"></div>
+    </div>
+    <div class="panel">
+      <div class="sec-head"><h3>Health conditions</h3><button type="button" class="add-btn" data-add="conditions">+ Add</button></div>
+      <p class="sec-desc">Your diagnosis and any other ongoing or past conditions. Mark ones that have cleared up as resolved.</p>
+      <div class="rec-list" id="list-conditions"></div>
+    </div>
+    <div class="panel">
+      <div class="sec-head"><h3>Medications</h3><button type="button" class="add-btn" data-add="medications">+ Add</button></div>
+      <p class="sec-desc">Tap Edit on any medication to update the dose, refills, or pharmacy.</p>
+      <div class="rec-list" id="list-medications"></div>
+    </div>
+    <div class="panel">
+      <div class="sec-head"><h3>Log history / Lab work</h3><label for="labpdf-input" class="add-btn" role="button" tabindex="0" style="cursor:pointer">+ Add lab report (PDF)</label></div>
+      <p class="sec-desc">Your latest lab report. Tap Look up past results to see older ones.</p>
+      <div class="rec-list" id="list-logs"></div>
+    </div>
+    <div class="panel">
+      <div class="sec-head"><h3>Test results</h3><button type="button" class="add-btn" data-add="testResults">+ Add</button></div>
+      <p class="sec-desc">Imaging, biopsies, pathology, and other reports. Your latest is shown; older ones are under Look up past results.</p>
+      <div class="rec-list" id="list-testResults"></div>
+    </div>
+    <div class="panel">
+      <div class="sec-head"><h3>Symptom &amp; fever log</h3><button type="button" class="add-btn" data-add="symptoms">+ Add</button></div>
+      <p class="sec-desc">Day-to-day check-ins between visits. Readings of 100.4°F or higher are flagged as a fever. Follow your own care team's instructions.</p>
+      <div class="rec-list" id="list-symptoms"></div>
+    </div>
+    <div class="panel">
+      <div class="sec-head"><h3>Appointments</h3><button type="button" class="add-btn" data-add="appointments">+ Add</button></div>
+      <p class="sec-desc">Upcoming and past appointments.</p>
+      <div class="rec-list" id="list-appointments"></div>
+    </div>
+    <div class="panel">
+      <div class="sec-head"><h3>Insurance</h3><button type="button" class="add-btn" data-add="insurance">+ Add</button></div>
+      <p class="sec-desc">Your plans, member IDs, and phone numbers.</p>
+      <p style="font-size:0.88rem;margin-bottom:12px">Quick links: <a href="https://www.medicare.gov" target="_blank" rel="noopener">Medicare</a> (<a href="tel:8006334227">800-633-4227</a>) &nbsp;·&nbsp; <a href="https://www.dhcs.ca.gov/services/medi-cal" target="_blank" rel="noopener">Medi-Cal</a> (<a href="tel:8005415555">800-541-5555</a>)</p>
+      <div class="rec-list" id="list-insurance"></div>
+    </div>
+    <div class="panel">
+      <div class="sec-head"><h3>Pharmacies</h3><button type="button" class="add-btn" data-add="pharmacies">+ Add</button></div>
+      <p class="sec-desc">Retail, specialty, mail-order, and hospital pharmacies.</p>
+      <div class="rec-list" id="list-pharmacies"></div>
+    </div>
+  </div>
+
+  <!-- CARE TEAM -->
+  <div class="view" id="view-careteam">
+    <h2>Care Team</h2>
+
+    <div class="panel">
+      <div class="sec-head"><h3>Doctors &amp; providers</h3><button type="button" class="add-btn" data-add="doctors">+ Add</button></div>
+      <div class="rec-list" id="list-doctors"></div>
+    </div>
+    <div class="panel">
+      <div class="sec-head"><h3>Visit history</h3><button type="button" class="add-btn" data-add="visits">+ Add</button></div>
+      <p class="sec-desc">What happened at each visit, newest first.</p>
+      <div class="rec-list" id="list-visits"></div>
+    </div>
+    <div class="panel">
+      <h3 style="margin-bottom:6px">Questions to ask your doctor</h3>
+      <p style="color:var(--muted);margin-bottom:14px">Common questions people bring to doctor appointments, grouped by topic. Browse for ideas, then build your own list below to bring to (or check off during) your next visit.</p>
+
+      <h4 style="margin:0 0 8px;font-family:'Newsreader',serif;font-weight:600;font-size:0.98rem">About your labs &amp; counts</h4>
+      <ul id="faq-labs" style="margin:0 0 18px;padding-left:20px;font-size:0.92rem;line-height:1.7"></ul>
+
+      <h4 style="margin:0 0 8px;font-family:'Newsreader',serif;font-weight:600;font-size:0.98rem">About treatment</h4>
+      <ul id="faq-treatment" style="margin:0 0 18px;padding-left:20px;font-size:0.92rem;line-height:1.7"></ul>
+
+      <h4 style="margin:0 0 8px;font-family:'Newsreader',serif;font-weight:600;font-size:0.98rem">About medications &amp; side effects</h4>
+      <ul id="faq-meds" style="margin:0 0 18px;padding-left:20px;font-size:0.92rem;line-height:1.7"></ul>
+
+      <h4 style="margin:0 0 8px;font-family:'Newsreader',serif;font-weight:600;font-size:0.98rem">About symptoms &amp; when to call</h4>
+      <ul id="faq-symptoms" style="margin:0 0 18px;padding-left:20px;font-size:0.92rem;line-height:1.7"></ul>
+
+      <h4 style="margin:0 0 8px;font-family:'Newsreader',serif;font-weight:600;font-size:0.98rem">Logistics &amp; next steps</h4>
+      <ul id="faq-logistics" style="margin:0 0 4px;padding-left:20px;font-size:0.92rem;line-height:1.7"></ul>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+
+      <h4 style="margin:0 0 8px;font-family:'Newsreader',serif;font-weight:600;font-size:0.98rem">My questions for next visit</h4>
+      <p style="color:var(--muted);margin-bottom:12px;font-size:0.88rem">Click "Add" on any suggestion above to copy it here, or type your own. Check items off as they're answered during the appointment.</p>
+      <form id="myq-form" style="display:flex;gap:8px;margin-bottom:12px">
+        <input type="text" id="myq-input" placeholder="Type a question to remember" style="flex:1;margin:0">
+        <button type="submit" class="primary" style="white-space:nowrap">Add</button>
+      </form>
+      <div id="myq-list-wrap"><div class="empty-state">No questions added yet.</div></div>
+      <button type="button" class="ghost" id="print-checklist-btn" style="margin-top:14px">Print checklist</button>
+    </div>
+
+    <div class="panel">
+      <div class="sec-head"><h3>Case manager</h3><button type="button" class="add-btn" data-add="caseManagers">+ Add</button></div>
+      <p class="sec-desc">Many insurance plans, including Medi-Cal and Medicare, can assign a case manager to help coordinate care, authorizations, and referrals.</p>
+      <div class="rec-list" id="list-caseManagers"></div>
+    </div>
+  </div>
+
+  <!-- SUPPORT -->
+  <div class="view" id="view-support">
+    <h2>Support</h2>
+
+    <div class="panel">
+      <div class="sec-head"><h3>Friends &amp; family</h3><button type="button" class="add-btn" data-add="supportContacts">+ Add</button></div>
+      <p class="sec-desc">People who help out: who to call, who drives you, who your emergency contact is.</p>
+      <div class="rec-list" id="list-supportContacts"></div>
+    </div>
+    <div class="panel">
+      <div class="sec-head"><h3>Organizations &amp; support groups</h3><button type="button" class="add-btn" data-add="orgs">+ Add</button></div>
+      <p class="sec-desc">Nonprofits, support groups, helplines, and financial help programs.</p>
+      <div class="rec-list" id="list-orgs"></div>
+    </div>
+  </div>
+
+  <!-- DIRECTORY -->
+  <div class="view" id="view-directory">
+    <h2>Directory</h2>
+    <div class="panel">
+      <div class="sec-head"><h3>Every number in one place</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="add-btn" data-add="quickLinks">+ Add a link</button><button type="button" class="add-btn" data-add="places">+ Add a place</button></div></div>
+      <p class="sec-desc" style="margin-bottom:0">Doctors, labs, hospitals, clinics, pharmacies, insurance, case managers, organizations, and support contacts. Tap a number to call it or a website to open it. Use Add a link for websites and phone numbers like patient portals, MyChart, or Labcorp. Use Add a place for labs, hospitals, urgent care, and anywhere else.</p>
+    </div>
+    <div class="panel" id="directory-wrap"></div>
+  </div>
+
+  <!-- COMMUNITY -->
+  <div class="view" id="view-community">
+    <div id="community-list-view">
+      <h2>My Notes</h2>
+      <p id="community-availability-note" style="color:var(--muted);font-size:0.85rem;margin-top:-8px">These posts are private to your own browser/device — not visible to other people, even others using this app. Think of it as personal notes rather than a shared board.</p>
+      <button class="ghost" id="new-post-btn" style="margin-bottom:16px">New post</button>
+      <div class="panel" id="posts-wrap"></div>
+    </div>
+    <div id="community-form-view" style="display:none">
+      <span class="back-link" id="cancel-post">&larr; Back to board</span>
+      <h2>New post</h2>
+      <div class="panel">
+        <form id="post-form">
+          <label>Your name</label>
+          <input type="text" id="post-author" placeholder="Anonymous">
+          <label>Title</label>
+          <input type="text" id="post-title" required>
+          <label>Post</label>
+          <textarea id="post-body" required style="min-height:120px"></textarea>
+          <button type="submit" class="primary">Publish post</button>
+        </form>
+      </div>
+    </div>
+    <div id="community-detail-view" style="display:none">
+      <span class="back-link" id="back-to-board">&larr; Back to board</span>
+      <div class="panel" id="post-detail-wrap"></div>
+      <div class="panel">
+        <h3>Add a comment</h3>
+        <form id="comment-form">
+          <label>Your name</label>
+          <input type="text" id="comment-author" placeholder="Anonymous">
+          <label>Comment</label>
+          <textarea id="comment-body" required></textarea>
+          <button type="submit" class="primary">Post comment</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <p class="disclaimer">None of this is medical software. It's a personal tracking and reference tool, not something to make clinical decisions from.</p>
+</div>
+
+<div id="edit-overlay" class="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+    <h3 id="edit-title" style="margin-bottom:4px"></h3>
+    <form id="edit-form" novalidate>
+      <div class="edit-grid" id="edit-fields"></div>
+      <div id="edit-error" style="color:var(--warn);font-size:0.85rem;min-height:1.1em;margin-top:8px"></div>
+      <div class="modal-actions">
+        <button type="submit" class="primary" style="margin:0">Save</button>
+        <button type="button" class="ghost" id="edit-cancel">Cancel</button>
+        <button type="button" class="danger-btn" id="edit-delete">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+<datalist id="doctor-names"></datalist>
+<datalist id="pharmacy-names"></datalist>
+<datalist id="known-apps"></datalist>
+<script>
+(function () {
+  const RANGES = {
+    wbc: [4.5, 11.0, 'x10⁹/L'],
+    anc: [1.5, 8.0, 'x10⁹/L'],
+    platelets: [150, 450, 'x10⁹/L'],
+    hemoglobin: [12.0, 17.0, 'g/dL'],
+  };
+
+  // ---------- PIN lock ----------
+  const PIN_KEY = 'my_med_hub_pin_v1';
+  async function hashPin(pin, saltB64) {
+    const enc = new TextEncoder();
+    const data = enc.encode(saltB64 + ':' + pin);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode(...new Uint8Array(digest)));
+  }
+  function randomSalt() {
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    return btoa(String.fromCharCode(...bytes));
+  }
+  function getPinRecord() {
+    try { const raw = localStorage.getItem(PIN_KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+  }
+  function setPinRecord(rec) { localStorage.setItem(PIN_KEY, JSON.stringify(rec)); }
+  function clearPinRecord() { localStorage.removeItem(PIN_KEY); }
+
+  (function initLock() {
+    const overlay = document.getElementById('lock-overlay');
+    const title = document.getElementById('lock-title');
+    const subtitle = document.getElementById('lock-subtitle');
+    const pinInput = document.getElementById('lock-pin-input');
+    const confirmInput = document.getElementById('lock-pin-confirm');
+    const errorEl = document.getElementById('lock-error');
+    const submitBtn = document.getElementById('lock-submit-btn');
+    const forgotEl = document.getElementById('lock-forgot');
+    const statusLine = document.getElementById('pin-status-line');
+    const setupBtn = document.getElementById('pin-setup-btn');
+    const removeBtn = document.getElementById('pin-remove-btn');
+    const lockNowBtn = document.getElementById('pin-lock-now-btn');
+
+    let mode = 'unlock'; // 'unlock' | 'create'
+
+    function refreshHomePanel() {
+      const rec = getPinRecord();
+      if (rec) {
+        statusLine.textContent = 'PIN is set for this device.';
+        setupBtn.textContent = 'Change PIN';
+        removeBtn.style.display = '';
+        lockNowBtn.style.display = '';
+      } else {
+        statusLine.textContent = 'No PIN set.';
+        setupBtn.textContent = 'Set a PIN';
+        removeBtn.style.display = 'none';
+        lockNowBtn.style.display = 'none';
+      }
+    }
+
+    function showOverlay(newMode) {
+      mode = newMode;
+      errorEl.textContent = '';
+      pinInput.value = '';
+      confirmInput.value = '';
+      if (mode === 'create') {
+        title.textContent = getPinRecord() ? 'Set a new PIN' : 'Create a PIN';
+        subtitle.textContent = 'Choose a 4–8 digit PIN for this device.';
+        confirmInput.style.display = '';
+        forgotEl.style.display = 'none';
+        submitBtn.textContent = 'Save PIN';
+      } else {
+        title.textContent = 'Enter PIN';
+        subtitle.textContent = 'This app is locked on this device.';
+        confirmInput.style.display = 'none';
+        forgotEl.style.display = '';
+        submitBtn.textContent = 'Unlock';
+      }
+      overlay.style.display = 'flex';
+      setTimeout(() => pinInput.focus(), 50);
+    }
+    function hideOverlay() { overlay.style.display = 'none'; }
+
+    async function handleSubmit() {
+      const pin = pinInput.value.trim();
+      if (!/^\d{4,8}$/.test(pin)) { errorEl.textContent = 'PIN must be 4–8 digits.'; return; }
+      if (mode === 'create') {
+        const confirmPin = confirmInput.value.trim();
+        if (pin !== confirmPin) { errorEl.textContent = "PINs don't match."; return; }
+        const salt = randomSalt();
+        const hash = await hashPin(pin, salt);
+        setPinRecord({ salt, hash });
+        hideOverlay();
+        refreshHomePanel();
+      } else {
+        const rec = getPinRecord();
+        if (!rec) { hideOverlay(); return; }
+        const hash = await hashPin(pin, rec.salt);
+        if (hash === rec.hash) {
+          hideOverlay();
+        } else {
+          errorEl.textContent = 'Incorrect PIN.';
+          pinInput.value = '';
+          pinInput.focus();
+        }
+      }
+    }
+
+    submitBtn.addEventListener('click', handleSubmit);
+    [pinInput, confirmInput].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') handleSubmit(); }));
+    forgotEl.addEventListener('click', () => {
+      const ok = confirm('This erases ALL data in this app on this device (labs, meds, contacts, everything) so it can be unlocked fresh. This cannot be undone. Continue?');
+      if (!ok) return;
+      clearPinRecord();
+      localStorage.removeItem(STORE_KEY);
+      location.reload();
+    });
+    setupBtn.addEventListener('click', () => showOverlay('create'));
+    removeBtn.addEventListener('click', () => {
+      const ok = confirm('Remove the PIN? The app will open without a lock screen on this device.');
+      if (!ok) return;
+      clearPinRecord();
+      refreshHomePanel();
+    });
+    lockNowBtn.addEventListener('click', () => showOverlay('unlock'));
+
+    refreshHomePanel();
+    if (getPinRecord()) showOverlay('unlock');
+  })();
+
+  // ---------- storage ----------
+  const STORE_KEY = 'my_med_hub_v1';
+  function loadStore() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (!parsed.insurance) parsed.insurance = [];
+        if (!parsed.doctors) parsed.doctors = [];
+        if (!parsed.visits) parsed.visits = [];
+        if (!parsed.symptoms) parsed.symptoms = [];
+        if (!parsed.medications) parsed.medications = [];
+        if (!parsed.caseManagers) parsed.caseManagers = [];
+        if (!parsed.pharmacies) parsed.pharmacies = [];
+        if (!parsed.myQuestions) parsed.myQuestions = [];
+        if (!parsed.quickLinks) parsed.quickLinks = [];
+        if (!parsed.supportContacts) parsed.supportContacts = [];
+        if (!parsed.testResults) parsed.testResults = [];
+        if (!parsed.places) parsed.places = [];
+        if (!parsed.orgs) parsed.orgs = [];
+        if (!parsed.allergies) parsed.allergies = [];
+        if (!parsed.conditions) parsed.conditions = [];
+        if (!parsed.nextIds.insurance) parsed.nextIds.insurance = 1;
+        if (!parsed.nextIds.doctor) parsed.nextIds.doctor = 1;
+        if (!parsed.nextIds.visit) parsed.nextIds.visit = 1;
+        if (!parsed.nextIds.symptom) parsed.nextIds.symptom = 1;
+        if (!parsed.nextIds.medication) parsed.nextIds.medication = 1;
+        if (!parsed.nextIds.caseManager) parsed.nextIds.caseManager = 1;
+        if (!parsed.nextIds.pharmacy) parsed.nextIds.pharmacy = 1;
+        if (!parsed.nextIds.myq) parsed.nextIds.myq = 1;
+        if (!parsed.nextIds.link) parsed.nextIds.link = 1;
+        if (!parsed.nextIds.support) parsed.nextIds.support = 1;
+        if (!parsed.nextIds.testResult) parsed.nextIds.testResult = 1;
+        if (!parsed.nextIds.place) parsed.nextIds.place = parsed.places.reduce((m, x) => Math.max(m, x.id || 0), 0) + 1;
+        if (!parsed.nextIds.org) parsed.nextIds.org = parsed.orgs.reduce((m, x) => Math.max(m, x.id || 0), 0) + 1;
+        if (!parsed.nextIds.allergy) parsed.nextIds.allergy = parsed.allergies.reduce((m, x) => Math.max(m, x.id || 0), 0) + 1;
+        if (!parsed.nextIds.condition) parsed.nextIds.condition = parsed.conditions.reduce((m, x) => Math.max(m, x.id || 0), 0) + 1;
+        return parsed;
+      }
+    } catch (e) { console.error('storage read failed', e); }
+    return { logs: [], appointments: [], posts: [], insurance: [], doctors: [], visits: [], symptoms: [], medications: [], caseManagers: [], pharmacies: [], myQuestions: [], quickLinks: [], supportContacts: [], testResults: [], places: [], orgs: [], allergies: [], conditions: [], nextIds: { allergy: 1, condition: 1, org: 1, place: 1, log: 1, appt: 1, post: 1, comment: 1, insurance: 1, doctor: 1, visit: 1, symptom: 1, medication: 1, caseManager: 1, pharmacy: 1, myq: 1, link: 1, support: 1, testResult: 1 } };
+  }
+  let store = loadStore();
+  function saveStore() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
+    catch (e) { console.error('storage write failed', e); }
+  }
+
+  // ---------- nav ----------
+  const views = ['home', 'tracker', 'careteam', 'support', 'directory', 'community'];
+  function showView(name) {
+    views.forEach(v => document.getElementById('view-' + v).classList.toggle('active', v === name));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+    if (name === 'community') showCommunityList();
+    if (name === 'directory') renderDirectory();
+  }
+  document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+  document.querySelectorAll('[data-goto]').forEach(el => el.addEventListener('click', () => showView(el.dataset.goto)));
+
+  // ---------- tracker ----------
+  function inRange(field, val) {
+    if (val === null || val === undefined || val === '' || !RANGES[field]) return true;
+    const [lo, hi] = RANGES[field];
+    return val >= lo && val <= hi;
+  }
+
+  // ---------- questions to ask ----------
+  const FAQ_QUESTIONS = {
+    'faq-labs': [
+      'What are my current blood counts (WBC, ANC, hemoglobin, platelets), and what do they mean for me right now?',
+      'Are my counts trending in the direction we want? What would a good vs. concerning trend look like?',
+      'Are my other test results (like scans or specialist tests) where they should be?',
+      'How often will I need labs going forward, and where can I get them drawn?',
+    ],
+    'faq-treatment': [
+      'What is the goal of my current treatment, and how long will it last?',
+      'How will we know if the treatment is working?',
+      'Are there other treatment options I should know about, including clinical trials?',
+      'What happens if this treatment stops working?',
+    ],
+    'faq-meds': [
+      'Are there any changes to my medications today? If so, why?',
+      'What side effects are common with this medication, and which ones should I report right away?',
+      'Are there foods, drinks, or other medications/supplements I need to avoid with this?',
+      'What should I do if I miss a dose or vomit shortly after taking it?',
+    ],
+    'faq-symptoms': [
+      'Which symptoms mean I should call the office, versus go to the ER, versus wait until my next visit?',
+      'Is a fever an emergency for me? What temperature is the cutoff?',
+      "What can I do at home for fatigue, nausea, or other side effects I'm having?",
+      'Are there activity or food precautions I should be following right now?',
+    ],
+    'faq-logistics': [
+      'What is the plan until my next appointment?',
+      'When is my next lab draw, scan, or visit, and do I need to schedule it myself?',
+      'Who do I call after hours or on weekends if something comes up?',
+      'Is there anything I should bring or prepare for my next visit?',
+    ],
+  };
+  function renderFaqLists() {
+    Object.entries(FAQ_QUESTIONS).forEach(([id, questions]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = questions.map(q => `<li style="margin-bottom:4px">${escapeHtml(q)} <button type="button" class="ghost faq-add-btn" data-q="${encodeURIComponent(q)}" style="padding:1px 8px;font-size:0.78rem;margin-left:4px;vertical-align:middle">+ Add</button></li>`).join('');
+    });
+    document.querySelectorAll('.faq-add-btn').forEach(btn => {
+      btn.addEventListener('click', () => addMyQuestion(decodeURIComponent(btn.dataset.q)));
+    });
+  }
+  function addMyQuestion(text) {
+    if (!text || !text.trim()) return;
+    store.myQuestions.push({ id: store.nextIds.myq++, text: text.trim(), checked: false });
+    saveStore();
+    renderMyQuestions();
+  }
+  function renderMyQuestions() {
+    const wrap = document.getElementById('myq-list-wrap');
+    if (!store.myQuestions.length) { wrap.innerHTML = '<div class="empty-state">No questions added yet.</div>'; return; }
+    wrap.innerHTML = store.myQuestions.map(q => `
+      <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+        <input type="checkbox" data-id="${q.id}" class="myq-check" ${q.checked ? 'checked' : ''} style="margin-top:3px">
+        <span style="flex:1;${q.checked ? 'text-decoration:line-through;color:var(--muted)' : ''}">${escapeHtml(q.text)}</span>
+        <button type="button" class="ghost myq-remove" data-id="${q.id}" style="padding:1px 8px;font-size:0.78rem">Remove</button>
+      </div>
+    `).join('');
+    wrap.querySelectorAll('.myq-check').forEach(cb => cb.addEventListener('change', () => {
+      const q = store.myQuestions.find(x => x.id === parseInt(cb.dataset.id));
+      if (q) { q.checked = cb.checked; saveStore(); renderMyQuestions(); }
+    }));
+    wrap.querySelectorAll('.myq-remove').forEach(btn => btn.addEventListener('click', () => {
+      store.myQuestions = store.myQuestions.filter(x => x.id !== parseInt(btn.dataset.id));
+      saveStore();
+      renderMyQuestions();
+    }));
+  }
+  document.getElementById('myq-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const input = document.getElementById('myq-input');
+    addMyQuestion(input.value);
+    input.value = '';
+  });
+  document.getElementById('print-checklist-btn').addEventListener('click', () => {
+    const area = document.getElementById('print-area');
+    const today = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    const items = store.myQuestions.length
+      ? store.myQuestions.map(q => `<div class="print-item"><span class="print-box">${q.checked ? '☑' : '☐'}</span><span>${escapeHtml(q.text)}</span></div>`).join('')
+      : '<p>No questions added yet — add some on the Care Team tab first.</p>';
+    area.innerHTML = `
+      <h1>Questions for my doctor</h1>
+      <div class="print-meta">Printed ${today} &nbsp;·&nbsp; My Med Hub</div>
+      ${items}
+    `;
+    window.print();
+  });
+
+  const FEVER_THRESHOLD_F = 100.4;
+  function renderRecentResults() {
+    // One slim line: the latest lab report and a button to open the original.
+    const wrap = document.getElementById('recent-results-wrap');
+    if (!wrap) return;
+    const last = [...(store.testResults || [])].sort((a, b) => (a.date > b.date ? -1 : 1))[0];
+    if (!last) { wrap.innerHTML = '<div style="color:var(--muted);font-size:0.9rem">No lab reports yet. Share one from Labcorp to this app, or pick the PDF below.</div>'; return; }
+    const rows = Array.isArray(last.rows) ? last.rows : [];
+    const flagged = rows.filter(r => r.flag).length;
+    wrap.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div><div style="font-weight:600">Latest: ${escapeHtml((last.description || last.type || 'Test result').replace(/ – .*$/, ''))}</div>
+      <div style="color:var(--muted);font-size:0.88rem">${escapeHtml(fmtDate(last.date))}${flagged ? ` · <span class="out-of-range">${flagged} out of range</span>` : ''}</div></div>
+      ${last.pdfId ? `<button type="button" class="ghost view-pdf" data-pdf="${escapeHtml(last.pdfId)}" style="margin:0">📄 View original</button>` : `<button type="button" class="ghost" data-goto="tracker" style="margin:0">View</button>`}
+    </div>`;
+  }
+  function gcalUrl(med) {
+    if (!med.reminderTime) return null;
+    const startDate = med.start || new Date().toISOString().slice(0, 10);
+    const dt = new Date(`${startDate}T${med.reminderTime}:00`);
+    if (isNaN(dt.getTime())) return null;
+    const endDt = new Date(dt.getTime() + 15 * 60000);
+    const fmt = d => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    let recur = '';
+    if (med.repeat === 'DAILY' || med.repeat === 'WEEKLY') {
+      recur = `&recur=RRULE:FREQ=${med.repeat}`;
+      if (med.end) recur += `;UNTIL=${med.end.replace(/-/g, '')}T235959Z`;
+    }
+    const text = encodeURIComponent(`Take ${med.name}${med.dose ? ' (' + med.dose + ')' : ''}`);
+    const details = encodeURIComponent([med.frequency, med.notes].filter(Boolean).join(' — ') || 'Medication reminder from My Med Hub');
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${fmt(dt)}/${fmt(endDt)}&details=${details}${recur}`;
+  }
+  const IS_ANDROID = /Android/i.test(navigator.userAgent);
+  // Android: open the phone's Calendar app on a full-size "new event" screen (falls back to the Google Calendar web page).
+  function calIntent({ title, begin, end, allDay, rrule, location, description, fallback }) {
+    const e = encodeURIComponent;
+    let u = 'intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.item/event;';
+    u += 'S.title=' + e(title) + ';l.beginTime=' + begin + ';l.endTime=' + end + ';';
+    if (allDay) u += 'B.allDay=true;';
+    if (rrule) u += 'S.rrule=' + e(rrule) + ';';
+    if (location) u += 'S.eventLocation=' + e(location) + ';';
+    if (description) u += 'S.description=' + e(description) + ';';
+    if (fallback && fallback !== '#') u += 'S.browser_fallback_url=' + e(fallback) + ';';
+    return u + 'end';
+  }
+  function medCalLink(med) {
+    const web = gcalUrl(med);
+    if (!web) return null;
+    if (!IS_ANDROID) return web;
+    const st = new Date(`${med.start || todayIso()}T${med.reminderTime}:00`);
+    if (isNaN(st.getTime())) return web;
+    let rrule = '';
+    if (med.repeat === 'DAILY' || med.repeat === 'WEEKLY') {
+      rrule = 'FREQ=' + med.repeat;
+      if (med.end) rrule += ';UNTIL=' + med.end.replace(/-/g, '') + 'T235959Z';
+    }
+    return calIntent({ title: `Take ${med.name}${med.dose ? ' (' + med.dose + ')' : ''}`, begin: st.getTime(), end: st.getTime() + 15 * 60000,
+      rrule, description: [med.frequency, med.notes].filter(Boolean).join(' — ') || 'Medication reminder from My Med Hub', fallback: web });
+  }
+  function apptCalLink(a) {
+    const web = apptCalUrl(a);
+    if (!IS_ANDROID) return web;
+    const title = 'Appointment' + (a.provider ? ' – ' + a.provider : '');
+    const description = [a.notes, 'From My Med Hub'].filter(Boolean).join('\n');
+    if (a.time) {
+      const st = new Date(`${a.date}T${a.time}:00`);
+      if (isNaN(st.getTime())) return web;
+      return calIntent({ title, begin: st.getTime(), end: st.getTime() + 3600000, location: a.location, description, fallback: web });
+    }
+    const d0 = Date.parse(a.date + 'T00:00:00Z');
+    if (isNaN(d0)) return web;
+    return calIntent({ title, begin: d0, end: d0 + 86400000, allDay: true, location: a.location, description, fallback: web });
+  }
+  function fmtTime(t) {
+    const m = String(t || '').match(/^(\d{1,2}):(\d{2})/);
+    if (!m) return t || '';
+    let h = +m[1]; const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+    return `${h}:${m[2]} ${ap}`;
+  }
+  function apptCalUrl(a) {
+    const text = encodeURIComponent('Appointment' + (a.provider ? ' – ' + a.provider : ''));
+    const details = encodeURIComponent([a.notes, 'From My Med Hub'].filter(Boolean).join('\n'));
+    const loc = a.location ? '&location=' + encodeURIComponent(a.location) : '';
+    let dates;
+    if (a.time) {
+      const st = new Date(`${a.date}T${a.time}:00`);
+      if (isNaN(st.getTime())) return '#';
+      const en = new Date(st.getTime() + 60 * 60000);
+      const f = d => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      dates = `${f(st)}/${f(en)}`;
+    } else {
+      const d0 = new Date(a.date + 'T12:00:00'); const d1 = new Date(d0.getTime() + 86400000);
+      const f = d => d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+      dates = `${f(d0)}/${f(d1)}`;
+    }
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates}&details=${details}${loc}`;
+  }
+  function telHref(phone) {
+    const digits = String(phone).replace(/[^\d+]/g, '');
+    return digits ? `tel:${digits}` : null;
+  }
+  function webHref(site) {
+    if (!site) return null;
+    return /^https?:\/\//.test(site) ? site : 'https://' + site;
+  }
+  // Apps a Quick Link can open directly. IDs are Play Store app IDs; "also" = other names people type.
+  const KNOWN_APPS = [
+    { id: 'com.CallTheCar.app', name: 'Call the Car', also: ['ctc go', 'ctcgo', 'callthecar'] },
+    { id: 'epic.mychart.android', name: 'MyChart', also: ['my chart'] },
+    { id: 'com.labcorp.patientportal', name: 'Labcorp Patient', also: ['labcorp', 'lab corp'] },
+    { id: 'org.kp.m', name: 'Kaiser Permanente', also: ['kaiser', 'kp'] },
+    { id: 'com.cvs.launchers.cvs', name: 'CVS Pharmacy', also: ['cvs'] },
+    { id: 'com.usablenet.mobile.walgreen', name: 'Walgreens', also: [] },
+    { id: 'com.goodrx', name: 'GoodRx', also: ['good rx'] },
+    { id: 'com.cigna.mycigna', name: 'myCigna', also: ['cigna'] },
+    { id: 'com.ecw.healow', name: 'healow', also: [] },
+    { id: 'com.jardogs.fmhmobile', name: 'FollowMyHealth', also: ['follow my health'] },
+    { id: 'us.zoom.videomeetings', name: 'Zoom', also: [] },
+    { id: 'me.lyft.android', name: 'Lyft', also: [] },
+    { id: 'com.ubercab', name: 'Uber', also: [] },
+    { id: 'com.google.android.apps.maps', name: 'Google Maps', also: ['maps'] },
+    { id: 'com.google.android.calendar', name: 'Google Calendar', also: ['calendar'] },
+    { id: 'com.google.android.gm', name: 'Gmail', also: [] },
+  ];
+  const APP_ID_RE = /^[A-Za-z][\w]*(\.[A-Za-z_][\w]*)+$/;
+  const squash = t => String(t || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  // Turns whatever was typed (an app name, a Play Store link, or an app ID) into { id, name }.
+  function resolveApp(text) {
+    const t = String(text || '').trim();
+    if (!t) return null;
+    const m = t.match(/[?&]id=([A-Za-z][\w.]*)/);
+    if (m && APP_ID_RE.test(m[1])) return { id: m[1], name: (KNOWN_APPS.find(a => a.id === m[1]) || {}).name || '' };
+    if (APP_ID_RE.test(t) && !/\s/.test(t) && /[a-z]\.[a-z]/i.test(t) && !/\.(com|org|net|gov)$/i.test(t)) return { id: t, name: '' };
+    const q = squash(t);
+    if (q.length < 2) return { id: '', name: t };
+    const hit = KNOWN_APPS.find(a => [a.name, ...a.also].some(n => squash(n) === q))
+      || (q.length >= 4 ? KNOWN_APPS.find(a => [a.name, ...a.also].some(n => { const k = squash(n); return k.length >= 4 && (q.includes(k) || k.includes(q)); })) : null);
+    return hit ? { id: hit.id, name: hit.name } : { id: '', name: t };
+  }
+  // Known app: open it (Play Store page if it isn't installed). Unknown app: jump to it in the Play Store, which has an Open button.
+  function appHref(appId, appName) {
+    if (!IS_ANDROID) return null;
+    const e = encodeURIComponent;
+    if (appId && APP_ID_RE.test(appId)) {
+      const store = 'https://play.google.com/store/apps/details?id=' + appId;
+      return `intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=${appId};S.browser_fallback_url=${e(store)};end`;
+    }
+    if (appName) {
+      const web = 'https://play.google.com/store/search?c=apps&q=' + e(appName);
+      return `intent://search?c=apps&q=${e(appName)}#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=${e(web)};end`;
+    }
+    return null;
+  }
+  function dirItem(name, sub, phone, website, email) {
+    const actions = [];
+    const tel = telHref(phone);
+    if (tel) actions.push(`<a href="${tel}">📞 ${escapeHtml(phone)}</a>`);
+    const web = webHref(website);
+    if (web) actions.push(`<a href="${web}" target="_blank" rel="noopener">🌐 Website</a>`);
+    if (email) actions.push(`<a href="mailto:${escapeHtml(email)}">✉️ Email</a>`);
+    return `<div class="dir-item"><div class="dir-info"><div class="dir-name">${escapeHtml(name)}</div>${sub ? `<div class="dir-sub">${escapeHtml(sub)}</div>` : ''}</div><div class="dir-actions">${actions.join('') || '<span class="dir-sub">No contact info</span>'}</div></div>`;
+  }
+  function renderDueToday() {
+    const wrap = document.getElementById('due-today-wrap');
+    if (!wrap) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const active = store.medications.filter(m => (!m.start || m.start <= today) && (!m.end || m.end >= today));
+    if (!active.length) { wrap.innerHTML = '<div class="empty-state">No active medications today.</div>'; return; }
+    const sorted = [...active].sort((a, b) => (a.reminderTime || '99:99').localeCompare(b.reminderTime || '99:99'));
+    wrap.innerHTML = '<ul style="margin:0;padding-left:18px">' + sorted.map(m =>
+      `<li style="margin-bottom:6px"><strong>${escapeHtml(m.name)}</strong>${m.dose ? ' — ' + escapeHtml(m.dose) : ''}${m.reminderTime ? ` <span style="color:var(--muted)">(${m.reminderTime})</span>` : ''}${m.frequency ? `<br><span style="color:var(--muted);font-size:0.85rem">${escapeHtml(m.frequency)}</span>` : ''}</li>`
+    ).join('') + '</ul>';
+  }
+  const BUILT_IN_LINKS = [
+    { name: 'Medicare', url: 'https://www.medicare.gov', phone: '800-633-4227' },
+    { name: 'Medi-Cal', url: 'https://www.dhcs.ca.gov/services/medi-cal', phone: '800-541-5555' },
+  ];
+  function normalizeUrl(u) {
+    if (!u) return '#';
+    return /^https?:\/\//i.test(u) ? u : 'https://' + u;
+  }
+  function renderQuickLinks() {
+    const wrap = document.getElementById('link-list-wrap');
+    if (!wrap) return;
+    store.quickLinks.forEach(l => { if (l.url && !l.phone && /^[\d\s().+-]{7,}$/.test(l.url) && l.url.replace(/\D/g, '').length >= 7) { l.phone = l.url; l.url = ''; } });
+    const all = [...BUILT_IN_LINKS.map(l => ({ ...l, builtIn: true })), ...store.quickLinks];
+    if (!all.length) { wrap.innerHTML = '<div class="empty-state">No links added yet.</div>'; return; }
+    wrap.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:10px">' + all.map(l => `
+      <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:10px;padding:8px 12px;background:var(--panel)">
+        ${l.url ? `<a href="${escapeHtml(normalizeUrl(l.url))}" target="_blank" rel="noopener" style="font-weight:600">${escapeHtml(l.name)}</a>` : `<span style="font-weight:600">${escapeHtml(l.name)}</span>`}
+        ${l.phone && telHref(l.phone) ? `<a href="${telHref(l.phone)}" style="white-space:nowrap">📞 ${escapeHtml(l.phone)}</a>` : ''}
+        ${l.builtIn ? '' : `<button type="button" class="ghost link-remove" data-id="${l.id}" style="padding:1px 8px;font-size:0.76rem">✕</button>`}
+      </div>
+    `).join('') + '</div>';
+    wrap.querySelectorAll('.link-remove').forEach(btn => btn.addEventListener('click', () => {
+      store.quickLinks = store.quickLinks.filter(x => x.id !== parseInt(btn.dataset.id));
+      saveStore();
+      renderQuickLinks();
+    }));
+  }
+  document.getElementById('link-form')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const nameInput = document.getElementById('link-name');
+    const urlInput = document.getElementById('link-url');
+    const phoneInput = document.getElementById('link-phone');
+    let url = urlInput.value.trim(), phone = phoneInput.value.trim();
+    // A phone number typed in the website box goes where it belongs.
+    if (url && !phone && /^[\d\s().+-]{7,}$/.test(url) && url.replace(/\D/g, '').length >= 7) { phone = url; url = ''; }
+    if (!nameInput.value.trim() || (!url && !phone)) { alert('Add a name plus a website or phone number.'); return; }
+    store.quickLinks.push({ id: store.nextIds.link++, name: nameInput.value.trim(), url, phone });
+    saveStore();
+    nameInput.value = '';
+    urlInput.value = '';
+    phoneInput.value = '';
+    renderQuickLinks();
+  });
+  function updateEmailFormFields() {
+    const isVisit = document.getElementById('er-category').value === 'visit';
+    document.getElementById('er-type-field').style.display = isVisit ? 'none' : '';
+    document.getElementById('er-subject-label').textContent = isVisit ? 'Reason for visit' : 'What is this';
+    document.getElementById('er-provider-label').textContent = isVisit ? 'Provider' : 'Ordered by';
+    document.getElementById('er-content-label').textContent = isVisit ? 'Paste the note / summary here' : 'Paste the email content here';
+  }
+  document.getElementById('er-category').addEventListener('change', updateEmailFormFields);
+  updateEmailFormFields();
+  document.getElementById('email-result-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const isVisit = document.getElementById('er-category').value === 'visit';
+    const date = document.getElementById('er-date').value;
+    const subject = document.getElementById('er-subject').value;
+    const provider = document.getElementById('er-provider').value;
+    const content = document.getElementById('er-content').value;
+    if (isVisit) {
+      store.visits.push({
+        id: store.nextIds.visit++,
+        date, provider, reason: subject, summary: content, followup: '',
+      });
+    } else {
+      store.testResults.push({
+        id: store.nextIds.testResult++,
+        date,
+        type: document.getElementById('er-type').value,
+        description: subject,
+        orderedBy: provider,
+        result: content,
+        rows: parseLabRows(content),
+        followup: false,
+        notes: 'Added from email',
+      });
+    }
+    saveStore();
+    e.target.reset();
+    document.getElementById('er-date').valueAsDate = new Date();
+    updateEmailFormFields();
+    renderTestResults();
+    renderRecentResults();
+    renderVisits();
+  });
+  function numOrNull(id) { const v = document.getElementById(id).value; return v === '' ? null : parseFloat(v); }
+
+  // ---------- downloads: Claude viewer if present, plain browser download otherwise ----------
+  async function getDownloads() {
+    try {
+      if (typeof window.claude !== 'undefined' && window.claude.use) {
+        const d = await window.claude.use('downloads');
+        if (d) return d;
+      }
+    } catch (e) {}
+    return {
+      async save({ filename, data }) {
+        const blob = data instanceof Blob ? data : new Blob([data], { type: /\.json$/i.test(filename) ? 'application/json' : /\.csv$/i.test(filename) ? 'text/csv' : 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      }
+    };
+  }
+
+  // ---------- export (downloads capability) ----------
+  (async function initExports() {
+    const downloads = await getDownloads();
+    const csvBtn = document.getElementById('export-csv-btn');
+    const pdfBtn = document.getElementById('export-pdf-btn');
+    if (!csvBtn || !pdfBtn) return; // exports removed from Lab work
+    if (!downloads) { csvBtn.style.display = 'none'; pdfBtn.style.display = 'none'; return; }
+
+    function sortedLogs() { return [...store.logs].sort((a, b) => (a.date < b.date ? -1 : 1)); }
+
+    async function exportCsv() {
+      const rows = [['Date', 'WBC', 'ANC', 'Platelets', 'Hemoglobin', 'Symptoms', 'Notes', 'Source']];
+      sortedLogs().forEach(l => rows.push([l.date, l.wbc ?? '', l.anc ?? '', l.platelets ?? '', l.hemoglobin ?? '', l.symptoms || '', l.notes || '', l.source || 'manual']));
+      const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      try {
+        await downloads.save({ filename: 'my-med-hub-labs.csv', data: csv });
+      } catch (e) { console.error('csv export failed', e); }
+    }
+
+    async function exportPdf() {
+      if (!window.jspdf) { console.error('jsPDF not loaded'); return; }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text('My Med Hub — Lab log', 14, 18);
+      doc.setFontSize(10);
+      doc.setTextColor(120);
+      doc.text('Reference ranges shown are generic adult defaults, for context only.', 14, 25);
+      const body = sortedLogs().map(l => [
+        l.date,
+        l.wbc ?? '—', l.anc ?? '—', l.platelets ?? '—', l.hemoglobin ?? '—',
+        l.symptoms || '—', l.notes || '—',
+      ]);
+      doc.autoTable({
+        startY: 32,
+        head: [['Date', 'WBC', 'ANC', 'Platelets', 'Hgb', 'Symptoms', 'Notes']],
+        body,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [47, 111, 98] },
+      });
+      if (store.insurance.length) {
+        let y = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 32) + 14;
+        doc.setFontSize(13);
+        doc.setTextColor(0);
+        doc.text('Insurance', 14, y);
+        doc.autoTable({
+          startY: y + 4,
+          head: [['Payer', 'Plan type', 'Member ID', 'Group #', 'Effective', 'Renewal', 'PCP', 'Notes']],
+          body: store.insurance.map(i => [i.payer, i.planType || '—', i.memberId || '—', i.group || '—', i.effective || '—', i.renewal || '—', i.pcp || '—', i.notes || '—']),
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [47, 111, 98] },
+        });
+      }
+      if (store.doctors.length) {
+        let y = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 32) + 14;
+        if (y > 260) { doc.addPage(); y = 20; }
+        doc.setFontSize(13);
+        doc.setTextColor(0);
+        doc.text('Doctors & providers', 14, y);
+        doc.autoTable({
+          startY: y + 4,
+          head: [['Name', 'Specialty', 'Practice', 'Phone', 'Address', 'Website', 'Notes']],
+          body: store.doctors.map(d => [d.name, d.specialty || '—', d.practice || '—', d.phone || '—', d.address || '—', d.website || '—', d.notes || '—']),
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [47, 111, 98] },
+        });
+      }
+      if (store.caseManagers.length) {
+        let y = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 32) + 14;
+        if (y > 260) { doc.addPage(); y = 20; }
+        doc.setFontSize(13);
+        doc.setTextColor(0);
+        doc.text('Case manager', 14, y);
+        doc.autoTable({
+          startY: y + 4,
+          head: [['Name', 'Organization / payer', 'Phone', 'Email', 'Notes']],
+          body: store.caseManagers.map(c => [c.name, c.org || '—', c.phone || '—', c.email || '—', c.notes || '—']),
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [47, 111, 98] },
+        });
+      }
+      if (store.visits.length) {
+        let y = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 32) + 14;
+        if (y > 260) { doc.addPage(); y = 20; }
+        doc.setFontSize(13);
+        doc.setTextColor(0);
+        doc.text('Visit history', 14, y);
+        const sortedVisits = [...store.visits].sort((a, b) => (a.date > b.date ? -1 : 1));
+        doc.autoTable({
+          startY: y + 4,
+          head: [['Date', 'Provider', 'Reason', 'Summary', 'Follow-up']],
+          body: sortedVisits.map(v => [v.date, v.provider || '—', v.reason || '—', v.summary || '—', v.followup || '—']),
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [47, 111, 98] },
+        });
+      }
+      if (store.medications.length) {
+        let y = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 32) + 14;
+        if (y > 260) { doc.addPage(); y = 20; }
+        doc.setFontSize(13);
+        doc.setTextColor(0);
+        doc.text('Current medications', 14, y);
+        doc.autoTable({
+          startY: y + 4,
+          head: [['Medication', 'Dose', 'Frequency', 'Doctor', 'Start', 'End', 'Pharmacy', 'Rx #', 'Qty/supply', 'Refills left', 'Last filled', 'Refill due', 'Notes']],
+          body: store.medications.map(m => [m.name, m.dose || '—', m.frequency || '—', m.doctor || '—', m.start || '—', m.end || '—', m.pharmacy || '—', m.rxNumber || '—', m.quantity || '—', m.refillsRemaining ?? '—', m.lastFilled || '—', m.refillDue || '—', m.notes || '—']),
+          styles: { fontSize: 7 },
+          headStyles: { fillColor: [47, 111, 98] },
+        });
+      }
+      if (store.pharmacies.length) {
+        let y = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 32) + 14;
+        if (y > 260) { doc.addPage(); y = 20; }
+        doc.setFontSize(13);
+        doc.setTextColor(0);
+        doc.text('Pharmacies', 14, y);
+        doc.autoTable({
+          startY: y + 4,
+          head: [['Name', 'Type', 'Phone', 'Fax', 'Address', 'Hours', 'Notes']],
+          body: store.pharmacies.map(p => [p.name, p.type || '—', p.phone || '—', p.fax || '—', p.address || '—', p.hours || '—', p.notes || '—']),
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [47, 111, 98] },
+        });
+      }
+      if (store.supportContacts.length) {
+        let y = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 32) + 14;
+        if (y > 260) { doc.addPage(); y = 20; }
+        doc.setFontSize(13);
+        doc.setTextColor(0);
+        doc.text('Support contacts', 14, y);
+        doc.autoTable({
+          startY: y + 4,
+          head: [['Name', 'Relationship', 'Phone', 'Email', 'How they help', 'Emergency', 'Notes']],
+          body: store.supportContacts.map(s => [s.name, s.relationship || '—', s.phone || '—', s.email || '—', s.helpsWith || '—', s.emergency ? 'Yes' : '—', s.notes || '—']),
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [47, 111, 98] },
+        });
+      }
+      if (store.testResults.length) {
+        let y = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 32) + 14;
+        if (y > 260) { doc.addPage(); y = 20; }
+        doc.setFontSize(13);
+        doc.setTextColor(0);
+        doc.text('Other test results', 14, y);
+        const sortedResults = [...store.testResults].sort((a, b) => (a.date > b.date ? -1 : 1));
+        doc.autoTable({
+          startY: y + 4,
+          head: [['Date', 'Type', 'Area / description', 'Result / impression', 'Ordered by', 'Follow-up', 'Notes']],
+          body: sortedResults.map(t => [t.date, t.type || '—', t.description || '—', t.result || '—', t.orderedBy || '—', t.followup ? 'Yes' : '—', t.notes || '—']),
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [47, 111, 98] },
+        });
+      }
+      if (store.symptoms.length) {
+        let y = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 32) + 14;
+        if (y > 260) { doc.addPage(); y = 20; }
+        doc.setFontSize(13);
+        doc.setTextColor(0);
+        doc.text('Symptom & fever log', 14, y);
+        const sortedSymptoms = [...store.symptoms].sort((a, b) => (a.date > b.date ? -1 : 1));
+        doc.autoTable({
+          startY: y + 4,
+          head: [['Date', 'Time', 'Temp (°F)', 'Severity', 'Symptoms', 'Notes']],
+          body: sortedSymptoms.map(s => [s.date, s.time || '—', s.temp ?? '—', s.severity || '—', s.symptoms || '—', s.notes || '—']),
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [47, 111, 98] },
+        });
+      }
+      const blob = doc.output('blob');
+      try {
+        await downloads.save({ filename: 'my-med-hub-labs.pdf', data: blob });
+      } catch (e) { console.error('pdf export failed', e); }
+    }
+
+    csvBtn.addEventListener('click', () => { if (store.logs.length) exportCsv(); });
+    pdfBtn.addEventListener('click', () => { if (store.logs.length) exportPdf(); });
+  })();
+
+  // ---------- full data backup / restore ----------
+  (async function initBackup() {
+    const downloads = await getDownloads();
+    const downloadBtn = document.getElementById('backup-download-btn');
+    const restoreBtn = document.getElementById('backup-restore-btn');
+    const fileInput = document.getElementById('backup-file-input');
+    const status = document.getElementById('backup-status');
+
+    if (!downloads) { downloadBtn.style.display = 'none'; }
+
+    downloadBtn.addEventListener('click', async () => {
+      let files = {};
+      try {
+        const all = await pdfFiles.all();
+        for (const [k, b] of Object.entries(all)) {
+          files[k] = await new Promise(res => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = () => res(null); r.readAsDataURL(b); });
+        }
+      } catch (e) { files = {}; }
+      const payload = JSON.stringify({ exportedAt: new Date().toISOString(), app: 'my-med-hub', version: 2, data: store, files }, null, 2);
+      try {
+        await downloads.save({ filename: `my-med-hub-backup-${new Date().toISOString().slice(0, 10)}.json`, data: payload });
+        status.textContent = 'Backup downloaded.';
+      } catch (e) {
+        status.textContent = 'Could not download backup.';
+        console.error('backup download failed', e);
+      }
+    });
+
+    restoreBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          const incoming = parsed.data || parsed; // tolerate a raw store object too
+          const hasAny = incoming && (incoming.logs || incoming.doctors || incoming.visits || incoming.insurance || incoming.symptoms || incoming.medications || incoming.appointments || incoming.posts || incoming.pharmacies || incoming.myQuestions || incoming.quickLinks || incoming.supportContacts || incoming.testResults || incoming.places || incoming.orgs || incoming.allergies || incoming.conditions);
+          if (!hasAny) { status.textContent = "That file doesn't look like a My Med Hub backup."; return; }
+          const ok = confirm('Restoring will replace all current data in this browser with the backup. Continue?');
+          if (!ok) { fileInput.value = ''; return; }
+          store = {
+            logs: incoming.logs || [], appointments: incoming.appointments || [], posts: incoming.posts || [],
+            insurance: incoming.insurance || [], doctors: incoming.doctors || [], visits: incoming.visits || [],
+            symptoms: incoming.symptoms || [], medications: incoming.medications || [], caseManagers: incoming.caseManagers || [],
+            pharmacies: incoming.pharmacies || [], myQuestions: incoming.myQuestions || [], quickLinks: incoming.quickLinks || [],
+            supportContacts: incoming.supportContacts || [], testResults: incoming.testResults || [], places: incoming.places || [], orgs: incoming.orgs || [], allergies: incoming.allergies || [], conditions: incoming.conditions || [],
+            nextIds: incoming.nextIds || { allergy: 1, condition: 1, org: 1, place: 1, log: 1, appt: 1, post: 1, comment: 1, insurance: 1, doctor: 1, visit: 1, symptom: 1, medication: 1, caseManager: 1, pharmacy: 1, myq: 1, link: 1, support: 1, testResult: 1 },
+          };
+          saveStore();
+          if (parsed.files && typeof parsed.files === 'object') {
+            Object.entries(parsed.files).forEach(([k, b64]) => {
+              if (!b64) return;
+              try { const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); pdfFiles.put(k, new Blob([u], { type: 'application/pdf' })).catch(() => {}); } catch (e) {}
+            });
+          }
+          renderAll(); renderMyQuestions(); renderQuickLinks(); showCommunityList();
+          status.textContent = 'Backup restored.';
+        } catch (e) {
+          status.textContent = "Couldn't read that file — make sure it's a backup exported from this app.";
+          console.error('restore failed', e);
+        } finally {
+          fileInput.value = '';
+        }
+      };
+      reader.readAsText(file);
+    });
+  })();
+
+  // ---------- notes (private, per-browser) ----------
+  let activePostId = null;
+  function showCommunityList() {
+    document.getElementById('community-list-view').style.display = '';
+    document.getElementById('community-form-view').style.display = 'none';
+    document.getElementById('community-detail-view').style.display = 'none';
+    renderPosts();
+  }
+  function showCommunityForm() {
+    document.getElementById('community-list-view').style.display = 'none';
+    document.getElementById('community-form-view').style.display = '';
+    document.getElementById('community-detail-view').style.display = 'none';
+  }
+  function showCommunityDetail(id) {
+    activePostId = id;
+    document.getElementById('community-list-view').style.display = 'none';
+    document.getElementById('community-form-view').style.display = 'none';
+    document.getElementById('community-detail-view').style.display = '';
+    renderPostDetail();
+  }
+  function renderPosts() {
+    const wrap = document.getElementById('posts-wrap');
+    if (!store.posts.length) { wrap.innerHTML = '<div class="empty-state">No notes yet — add your first one.</div>'; return; }
+    const sorted = [...store.posts].sort((a, b) => b.id - a.id);
+    wrap.innerHTML = sorted.map(p => `
+      <div class="post-item" data-id="${p.id}">
+        <h3 style="margin-bottom:2px">${escapeHtml(p.title)}</h3>
+        <div class="meta">${escapeHtml(p.author || 'Anonymous')} &nbsp;·&nbsp; ${(p.comments || []).length} follow-up${(p.comments || []).length === 1 ? '' : 's'}</div>
+      </div>
+    `).join('');
+    wrap.querySelectorAll('.post-item').forEach(el => el.addEventListener('click', () => showCommunityDetail(parseInt(el.dataset.id))));
+  }
+  function renderPostDetail() {
+    const post = store.posts.find(p => p.id === activePostId);
+    if (!post) { showCommunityList(); return; }
+    document.getElementById('post-detail-wrap').innerHTML = `
+      <h2 style="margin-bottom:4px">${escapeHtml(post.title)}</h2>
+      <div class="meta" style="color:var(--muted);margin-bottom:14px">${escapeHtml(post.author || 'Anonymous')}</div>
+      <p>${escapeHtml(post.body)}</p>
+      <div id="comments-wrap">${(post.comments || []).map(c => `
+        <div class="comment"><div class="meta">${escapeHtml(c.author || 'Anonymous')}</div><p style="margin:0">${escapeHtml(c.body)}</p></div>
+      `).join('') || '<p style="color:var(--muted)">No follow-ups yet.</p>'}</div>
+    `;
+  }
+  document.getElementById('new-post-btn').addEventListener('click', showCommunityForm);
+  document.getElementById('cancel-post').addEventListener('click', showCommunityList);
+  document.getElementById('back-to-board').addEventListener('click', showCommunityList);
+  document.getElementById('post-form').addEventListener('submit', e => {
+    e.preventDefault();
+    store.posts.push({
+      id: store.nextIds.post++,
+      author: document.getElementById('post-author').value || 'Anonymous',
+      title: document.getElementById('post-title').value,
+      body: document.getElementById('post-body').value,
+      comments: [],
+    });
+    saveStore();
+    e.target.reset();
+    showCommunityList();
+  });
+  document.getElementById('comment-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const post = store.posts.find(p => p.id === activePostId);
+    if (!post) return;
+    post.comments = post.comments || [];
+    post.comments.push({ author: document.getElementById('comment-author').value || 'Anonymous', body: document.getElementById('comment-body').value });
+    saveStore();
+    e.target.reset();
+    renderPostDetail();
+  });
+
+  // ---------- MyChart / C-CDA import (runs entirely in the browser) ----------
+  async function unzipXmlFiles(buf) {
+    const dv = new DataView(buf);
+    const u8 = new Uint8Array(buf);
+    let eocd = -1;
+    for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 65557); i--) {
+      if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error('not a zip');
+    const count = dv.getUint16(eocd + 10, true);
+    let p = dv.getUint32(eocd + 16, true);
+    const dec = new TextDecoder();
+    const out = [];
+    for (let n = 0; n < count; n++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) break;
+      const method = dv.getUint16(p + 10, true);
+      const compSize = dv.getUint32(p + 20, true);
+      const nameLen = dv.getUint16(p + 28, true);
+      const extraLen = dv.getUint16(p + 30, true);
+      const commentLen = dv.getUint16(p + 32, true);
+      const localOff = dv.getUint32(p + 42, true);
+      const name = dec.decode(u8.subarray(p + 46, p + 46 + nameLen));
+      p += 46 + nameLen + extraLen + commentLen;
+      if (!/\.xml$/i.test(name) || /metadata\.xml$/i.test(name)) continue;
+      const lNameLen = dv.getUint16(localOff + 26, true);
+      const lExtraLen = dv.getUint16(localOff + 28, true);
+      const start = localOff + 30 + lNameLen + lExtraLen;
+      const data = u8.slice(start, start + compSize);
+      let text;
+      if (method === 0) text = dec.decode(data);
+      else if (method === 8) {
+        const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+        text = await new Response(stream).text();
+      } else continue;
+      out.push({ name, text });
+    }
+    return out;
+  }
+
+  function parseCcda(xmlText) {
+    const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+    if (doc.getElementsByTagName('parsererror').length) return null;
+    const root = doc.documentElement;
+    if (!root || root.localName !== 'ClinicalDocument') return null;
+    const kids = (el, name) => el ? Array.from(el.children).filter(c => c.localName === name) : [];
+    const kid = (el, name) => kids(el, name)[0] || null;
+    const path = (el, ...names) => { for (const n of names) { el = kid(el, n); if (!el) return null; } return el; };
+    const all = (el, name) => el ? Array.from(el.getElementsByTagNameNS('*', name)) : [];
+    const clean = t => (t || '').replace(/\s+/g, ' ').trim();
+    const idMap = {};
+    all(root, '*').forEach(e => { const id = e.getAttribute('ID'); if (id) idMap[id] = e; });
+    const refText = el => {
+      if (!el) return '';
+      const ref = kid(el, 'reference');
+      if (ref) { const target = idMap[(ref.getAttribute('value') || '').replace(/^#/, '')]; if (target) return clean(target.textContent); }
+      return clean(el.textContent);
+    };
+    const codeName = c => {
+      if (!c) return '';
+      const ot = kid(c, 'originalText');
+      const t = ot ? refText(ot) : '';
+      return t || c.getAttribute('displayName') || '';
+    };
+    const tsDate = v => (v && /^\d{8}/.test(v)) ? `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}` : '';
+    const effDate = el => {
+      const et = kid(el, 'effectiveTime');
+      if (!et) return '';
+      return tsDate(et.getAttribute('value')) || tsDate(kid(et, 'low') && kid(et, 'low').getAttribute('value')) || tsDate(kid(et, 'high') && kid(et, 'high').getAttribute('value'));
+    };
+    const personName = el => {
+      const n = el && (kid(el, 'name'));
+      if (!n) return '';
+      const parts = [...kids(n, 'prefix'), ...kids(n, 'given'), ...kids(n, 'family'), ...kids(n, 'suffix')].map(x => clean(x.textContent)).filter(Boolean);
+      return parts.length ? parts.join(' ') : clean(n.textContent);
+    };
+    const phoneOf = el => {
+      const t = kids(el, 'telecom').map(x => x.getAttribute('value') || '').find(v => /^tel:/i.test(v));
+      return t ? t.replace(/^tel:/i, '').replace(/^\+1-?/, '') : '';
+    };
+    const addrOf = el => {
+      const a = kid(el, 'addr');
+      if (!a || a.getAttribute('nullFlavor')) return '';
+      const lines = kids(a, 'streetAddressLine').map(x => clean(x.textContent)).filter(Boolean).join(' ');
+      const city = clean(kid(a, 'city') && kid(a, 'city').textContent);
+      const st = clean(kid(a, 'state') && kid(a, 'state').textContent);
+      const zip = clean(kid(a, 'postalCode') && kid(a, 'postalCode').textContent);
+      return [lines, city, [st, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    };
+    const sections = {};
+    all(root, 'section').forEach(sec => {
+      const c = kid(sec, 'code');
+      const code = c && c.getAttribute('code');
+      if (code && !sections[code]) sections[code] = sec;
+    });
+    const res = { allergies: [], conditions: [], medications: [], results: [], logs: [], doctors: [], visits: [], insurance: [] };
+
+    // allergies
+    kids(sections['48765-2'], 'entry').forEach(en => {
+      const obs = all(en, 'observation').find(o => all(o, 'playingEntity').length);
+      if (!obs) return;
+      const pe = all(obs, 'playingEntity')[0];
+      const name = codeName(kid(pe, 'code')) || clean(kid(pe, 'name') && kid(pe, 'name').textContent);
+      if (!name) return;
+      const reactions = kids(obs, 'entryRelationship').filter(er => er.getAttribute('typeCode') === 'MFST')
+        .map(er => codeName(kid(kid(er, 'observation'), 'value'))).filter(Boolean);
+      const sevObs = all(obs, 'observation').find(o => { const c = kid(o, 'code'); return c && c.getAttribute('code') === 'SEV'; });
+      let severity = sevObs ? codeName(kid(sevObs, 'value')) : '';
+      severity = /severe/i.test(severity) ? 'Severe' : /moderate/i.test(severity) ? 'Moderate' : /mild/i.test(severity) ? 'Mild' : '';
+      res.allergies.push({ name, reaction: [...new Set(reactions)].join(', '), severity, notes: '' });
+    });
+
+    // health conditions (active + resolved problem lists)
+    [['11450-4', 'Active'], ['11348-0', 'Resolved']].forEach(([code, status]) => {
+      kids(sections[code], 'entry').forEach(en => {
+        const obs = all(en, 'observation').find(o => { const c = kid(o, 'code'); return !(c && c.getAttribute('code') === '33999-4') && kid(o, 'value'); });
+        if (!obs) return;
+        const name = codeName(kid(obs, 'value'));
+        if (!name) return;
+        res.conditions.push({ name, status, since: effDate(obs), notes: '' });
+      });
+    });
+
+    // medications
+    const medSec = sections['10160-0'];
+    kids(medSec, 'entry').forEach(en => {
+      const sa = kid(en, 'substanceAdministration');
+      if (!sa) return;
+      const status = kid(sa, 'statusCode');
+      if (status && /completed|aborted|cancelled|nullified/i.test(status.getAttribute('code') || '')) return;
+      const mat = path(sa, 'consumable', 'manufacturedProduct', 'manufacturedMaterial');
+      let name = codeName(kid(mat, 'code')) || clean(kid(mat, 'name') && kid(mat, 'name').textContent);
+      if (!name) return;
+      const sig = refText(kid(sa, 'text'));
+      let start = '';
+      const et = kids(sa, 'effectiveTime')[0];
+      if (et) start = tsDate(kid(et, 'low') && kid(et, 'low').getAttribute('value')) || tsDate(et.getAttribute('value'));
+      if (!start) {
+        const ref = mat && all(mat, 'reference')[0];
+        const item = ref && idMap[(ref.getAttribute('value') || '').replace(/^#/, '')];
+        const m = item && item.parentElement && item.parentElement.textContent.match(/Started (\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (m) start = `${m[3]}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+      }
+      const strength = (name.match(/\d[\d.,]*\s*(?:mg|mcg|g|mL|units?|%|meq)(?:\/[\w.\-]+)?/i) || [''])[0];
+      res.medications.push({ name, dose: strength, frequency: sig, start });
+    });
+
+    // results (+ blood-count log rows)
+    const resSec = sections['30954-2'];
+    kids(resSec, 'entry').forEach(en => {
+      const org = kid(en, 'organizer');
+      const obsList = org ? kids(org, 'component').map(c => kid(c, 'observation')).filter(Boolean) : [kid(en, 'observation')].filter(Boolean);
+      if (!obsList.length) return;
+      const panel = org ? codeName(kid(org, 'code')) : codeName(kid(obsList[0], 'code'));
+      const date = (org && effDate(org)) || effDate(obsList[0]);
+      const lines = [];
+      const rowsOut = [];
+      const nums = {};
+      let flagged = false;
+      obsList.forEach(ob => {
+        const nm = codeName(kid(ob, 'code'));
+        const v = kid(ob, 'value');
+        if (!nm || !v) return;
+        let val = v.getAttribute('value');
+        const unitAttr = v.getAttribute('unit');
+        if (val === null) val = clean(v.textContent);
+        if (!val) return;
+        const rr = path(ob, 'referenceRange', 'observationRange');
+        let range = rr ? clean(kid(rr, 'text') ? kid(rr, 'text').textContent : '') : '';
+        if (!range && rr) {
+          const rv = kid(rr, 'value');
+          const lo = rv && kid(rv, 'low'), hi = rv && kid(rv, 'high');
+          if (lo || hi) range = `${lo ? lo.getAttribute('value') || '' : ''} - ${hi ? hi.getAttribute('value') || '' : ''} ${(lo || hi).getAttribute('unit') || ''}`.trim();
+        }
+        const unit = unitAttr && unitAttr !== '1' ? unitAttr : '';
+        const ic = kid(ob, 'interpretationCode');
+        const flag = ic && /^(H|HH|L|LL|A|AA|HU|LU)$/i.test(ic.getAttribute('code') || '') ? ic.getAttribute('code').toUpperCase() : '';
+        if (flag) flagged = true;
+        lines.push(`${nm}: ${val}${unit ? ' ' + unit : ''}${flag ? ' [' + flag + ']' : ''}${range ? ' (ref ' + range + ')' : ''}`);
+        rowsOut.push({ name: nm, value: String(val), flag: flag ? ({ H: 'High', HH: 'Critical high', L: 'Low', LL: 'Critical low', A: 'Abnormal', AA: 'Critical', HU: 'Very high', LU: 'Very low' }[flag] || flag) : '', units: unit, range });
+        const num = parseFloat(String(val).replace(/,/g, ''));
+        if (!isNaN(num)) {
+          const up = nm.toUpperCase();
+          if (/WHITE BLOOD CELL|^WBC\b/.test(up)) nums.wbc = num > 200 ? num / 1000 : num;
+          else if (/ABSOLUTE NEUTROPHIL|^ANC\b|NEUTROPHILS?,? ABS/.test(up)) nums.anc = num > 100 ? num / 1000 : num;
+          else if (/^PLATELET(S| COUNT)?$|^PLT\b/.test(up)) nums.platelets = num > 5000 ? num / 1000 : num;
+          else if (/^HEMOGLOBIN$|^HGB$|^HB$/.test(up)) nums.hemoglobin = num;
+        }
+      });
+      if (!lines.length || !panel) return;
+      const type = /X-?RAY|XR\b/i.test(panel) ? 'X-ray' : /\bCT\b/.test(panel) ? 'CT scan' : /MRI/i.test(panel) ? 'MRI' : /ULTRASOUND|\bUS\b/i.test(panel) ? 'Ultrasound' : /PATHOLOG/i.test(panel) ? 'Pathology' : 'Lab / bloodwork';
+      const perf = all(org || obsList[0], 'representedOrganization')[0];
+      const perfName = perf ? clean(kid(perf, 'name') && kid(perf, 'name').textContent) : '';
+      res.results.push({ date, type, description: panel, result: lines.join('\n'), rows: rowsOut, followup: false, flagged, performedAt: perfName });
+      if (nums.wbc !== undefined || nums.hemoglobin !== undefined || nums.platelets !== undefined || nums.anc !== undefined) {
+        const r2 = x => x === undefined ? null : Math.round(x * 100) / 100;
+        res.logs.push({ date, wbc: r2(nums.wbc), anc: r2(nums.anc), platelets: r2(nums.platelets), hemoglobin: r2(nums.hemoglobin) });
+      }
+    });
+
+    // care team
+    const addDoctor = (ae, extra) => {
+      if (!ae) return;
+      const name = personName(kid(ae, 'assignedPerson'));
+      if (!name || /^(NI|UNK)?$/.test(name)) return;
+      const specialty = codeName(kid(ae, 'code'));
+      res.doctors.push(Object.assign({ name, specialty, practice: '', phone: phoneOf(ae), address: addrOf(ae) }, extra || {}));
+    };
+    const ctSec = sections['85847-2'];
+    kids(ctSec, 'entry').forEach(en => {
+      all(en, 'performer').forEach(pf => {
+        const fc = kid(pf, 'functionCode');
+        const role = fc ? (fc.getAttribute('displayName') || '') : '';
+        addDoctor(kid(pf, 'assignedEntity'), { notes: role });
+      });
+    });
+
+    // visit (only documents describing one encounter)
+    const enc = all(root, 'encompassingEncounter')[0];
+    if (enc) {
+      const date = effDate(enc);
+      const part = kids(enc, 'encounterParticipant')[0];
+      const ae = part ? kid(part, 'assignedEntity') : path(enc, 'responsibleParty', 'assignedEntity');
+      const provider = ae ? personName(kid(ae, 'assignedPerson')) : '';
+      const loc = path(enc, 'location', 'healthCareFacility', 'location', 'name');
+      const place = loc ? clean(loc.textContent) : '';
+      if (ae) addDoctor(ae, { practice: place });
+      const encType = codeName(kid(enc, 'code'));
+      const rfvSec = sections['29299-5'] || sections['46239-0'];
+      let reason = '';
+      if (rfvSec) { const tds = all(kid(rfvSec, 'text'), 'td'); reason = tds.length ? tds.map(t => clean(t.textContent)).join('; ') : clean(kid(rfvSec, 'text') && kid(rfvSec, 'text').textContent); }
+      const hasNote = !!(sections['10164-2'] || sections['11506-3']);
+      const summary = [[encType, place].filter(Boolean).join(' at '), hasNote ? 'Full visit note is in MyChart.' : ''].filter(Boolean).join('. ');
+      if (date) res.visits.push({ date, provider, reason: reason || encType, summary, followup: '' });
+    }
+
+    // insurance
+    const insSec = sections['48768-6'];
+    kids(insSec, 'entry').forEach(en => {
+      all(en, 'act').filter(a => a.parentElement && a.parentElement.localName === 'entryRelationship').forEach(act => {
+        const pf = kid(act, 'performer');
+        const org = pf && path(pf, 'assignedEntity', 'representedOrganization');
+        const payer = org ? clean(kid(org, 'name') && kid(org, 'name').textContent) : '';
+        const cov = kids(act, 'participant').find(p => p.getAttribute('typeCode') === 'COV');
+        const pr = cov && kid(cov, 'participantRole');
+        const memberId = pr ? ((kids(pr, 'id').find(i => i.getAttribute('extension')) || { getAttribute: () => '' }).getAttribute('extension') || '') : '';
+        const t = cov && kid(cov, 'time');
+        const effective = t ? tsDate(kid(t, 'low') && kid(t, 'low').getAttribute('value')) : '';
+        if (!payer && !memberId) return;
+        const phone = pf ? phoneOf(kid(pf, 'assignedEntity')) : '';
+        res.insurance.push({ payer: payer || 'Insurance', planType: codeName(kid(act, 'code')), memberId, group: '', effective, renewal: '', pcp: '', notes: phone ? 'Payer phone ' + phone : '' });
+      });
+    });
+    return res;
+  }
+
+  (function initMyChartImport() {
+    const pickBtn = document.getElementById('mychart-pick-btn');
+    const fileInput = document.getElementById('mychart-file-input');
+    const status = document.getElementById('mychart-status');
+    const preview = document.getElementById('mychart-preview');
+    const list = document.getElementById('mychart-preview-list');
+    let pending = null;
+    const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const CATS = [
+      { key: 'allergies', label: 'Allergies' },
+      { key: 'conditions', label: 'Health conditions' },
+      { key: 'medications', label: 'Medications' },
+      { key: 'logs', label: 'Blood counts (WBC, ANC, platelets, hemoglobin)' },
+      { key: 'results', label: 'Lab & test results' },
+      { key: 'doctors', label: 'Doctors & care team' },
+      { key: 'visits', label: 'Visits' },
+      { key: 'insurance', label: 'Insurance' },
+    ];
+    function dedupeNew(found) {
+      const seen = {
+        allergies: new Set((store.allergies || []).map(a => norm(a.name))),
+        conditions: new Set((store.conditions || []).map(c => norm(c.name))),
+        medications: new Set(store.medications.map(m => norm(m.name))),
+        logs: new Set(store.logs.map(l => l.date)),
+        results: new Set(store.testResults.map(t => t.date + '|' + norm(t.description))),
+        doctors: new Set(store.doctors.map(d => norm(d.name))),
+        visits: new Set(store.visits.map(v => v.date + '|' + norm(v.provider))),
+        insurance: new Set(store.insurance.map(i => norm(i.memberId || i.payer))),
+      };
+      const keyOf = {
+        allergies: x => norm(x.name), conditions: x => norm(x.name),
+        medications: x => norm(x.name), logs: x => x.date, results: x => x.date + '|' + norm(x.description),
+        doctors: x => norm(x.name), visits: x => x.date + '|' + norm(x.provider), insurance: x => norm(x.memberId || x.payer),
+      };
+      const out = {};
+      CATS.forEach(({ key }) => {
+        out[key] = [];
+        (found[key] || []).forEach(item => {
+          const k = keyOf[key](item);
+          if (!k || seen[key].has(k)) return;
+          seen[key].add(k);
+          out[key].push(item);
+        });
+      });
+      return out;
+    }
+    pickBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files[0];
+      fileInput.value = '';
+      if (!file) return;
+      preview.style.display = 'none';
+      status.textContent = 'Reading your file…';
+      try {
+        const buf = await file.arrayBuffer();
+        const head = new Uint8Array(buf, 0, 4);
+        let xmls;
+        if (head[0] === 0x50 && head[1] === 0x4b) xmls = await unzipXmlFiles(buf);
+        else xmls = [{ name: file.name, text: new TextDecoder().decode(buf) }];
+        const merged = { allergies: [], conditions: [], medications: [], results: [], logs: [], doctors: [], visits: [], insurance: [] };
+        let docs = 0;
+        xmls.forEach(x => {
+          const r = parseCcda(x.text);
+          if (!r) return;
+          docs++;
+          Object.keys(merged).forEach(k => merged[k].push(...r[k]));
+        });
+        if (!docs) { status.textContent = "That file doesn't contain a health summary this app can read. In MyChart, use Download on your health summary and pick the .zip file it saves."; return; }
+        pending = dedupeNew(merged);
+        const total = CATS.reduce((n, c) => n + pending[c.key].length, 0);
+        if (!total) { status.textContent = 'Everything in this file is already in the app. Nothing new to add.'; return; }
+        list.innerHTML = CATS.filter(c => pending[c.key].length).map(c =>
+          `<label style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-weight:normal;margin:0"><input type="checkbox" data-cat="${c.key}" checked style="width:auto;margin:0"> <span>${c.label} <span style="color:var(--muted)">(${pending[c.key].length} new)</span></span></label>`
+        ).join('');
+        status.textContent = '';
+        preview.style.display = '';
+      } catch (e) {
+        console.error('mychart import failed', e);
+        status.textContent = "Couldn't open that file. Make sure it's the .zip from MyChart's Download button, not a printed page.";
+      }
+    });
+    document.getElementById('mychart-cancel-btn').addEventListener('click', () => { pending = null; preview.style.display = 'none'; status.textContent = ''; });
+    document.getElementById('mychart-add-btn').addEventListener('click', () => {
+      if (!pending) return;
+      ['allergy', 'condition', 'medication', 'log', 'testResult', 'doctor', 'visit', 'insurance'].forEach(k => {
+        if (!Number.isFinite(store.nextIds[k])) {
+          const arr = { allergy: store.allergies || (store.allergies = []), condition: store.conditions || (store.conditions = []), medication: store.medications, log: store.logs, testResult: store.testResults, doctor: store.doctors, visit: store.visits, insurance: store.insurance }[k];
+          store.nextIds[k] = arr.reduce((m, x) => Math.max(m, x.id || 0), 0) + 1;
+        }
+      });
+      const chosen = new Set(Array.from(list.querySelectorAll('input[data-cat]:checked')).map(c => c.dataset.cat));
+      const tag = 'Imported from MyChart';
+      const added = [];
+      if (chosen.has('allergies')) pending.allergies.forEach(a => store.allergies.push(Object.assign({ id: store.nextIds.allergy++ }, a)));
+      if (chosen.has('conditions')) pending.conditions.forEach(c => store.conditions.push(Object.assign({ id: store.nextIds.condition++ }, c)));
+      if (chosen.has('medications')) pending.medications.forEach(m => store.medications.push({
+        id: store.nextIds.medication++, name: m.name, dose: m.dose || '', frequency: m.frequency || '', doctor: '', start: m.start || '', end: '',
+        reminderTime: '', repeat: '', notes: tag, pharmacy: '', rxNumber: '', quantity: '', refillsRemaining: null, lastFilled: '', refillDue: '',
+      }));
+      if (chosen.has('logs')) pending.logs.forEach(l => store.logs.push({ id: store.nextIds.log++, date: l.date, wbc: l.wbc, anc: l.anc, platelets: l.platelets, hemoglobin: l.hemoglobin, symptoms: '', notes: tag }));
+      if (chosen.has('results')) pending.results.forEach(r => store.testResults.push({
+        id: store.nextIds.testResult++, date: r.date, type: r.type, description: r.description, orderedBy: '',
+        result: r.result, rows: r.rows || [], followup: false, notes: [tag, r.performedAt ? 'performed at ' + r.performedAt : '', r.flagged ? 'some values flagged outside the reference range' : ''].filter(Boolean).join('; '),
+      }));
+      if (chosen.has('doctors')) pending.doctors.forEach(d => store.doctors.push({ id: store.nextIds.doctor++, name: d.name, specialty: d.specialty || '', practice: d.practice || '', phone: d.phone || '', address: d.address || '', website: '', notes: [d.notes, tag].filter(Boolean).join('; ') }));
+      if (chosen.has('visits')) pending.visits.forEach(v => store.visits.push({ id: store.nextIds.visit++, date: v.date, provider: v.provider, reason: v.reason, summary: v.summary, followup: '' }));
+      if (chosen.has('insurance')) pending.insurance.forEach(i => store.insurance.push(Object.assign({ id: store.nextIds.insurance++ }, i)));
+      CATS.forEach(c => { if (chosen.has(c.key) && pending[c.key].length) added.push(`${pending[c.key].length} ${c.label.split(' (')[0].toLowerCase()}`); });
+      saveStore();
+      renderAll();
+      pending = null;
+      preview.style.display = 'none';
+      status.textContent = added.length ? `Added ${added.join(', ')}. You can review or edit them in My Health and Care Team.` : 'Nothing was selected, so nothing was added.';
+    });
+  })();
+
+  // ---------- records: schemas, cards, and the shared add/edit window ----------
+  const F = (key, label, type, extra) => Object.assign({ key, label, type: type || 'text' }, extra || {});
+  const todayIso = () => new Date().toISOString().slice(0, 10);
+  const fmtDate = d => {
+    if (!d || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return d || '';
+    const [y, m, day] = d.split('-').map(Number);
+    return new Date(y, m - 1, day).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+  const byDateDesc = (a, b) => ((a.date || '') < (b.date || '') ? 1 : (a.date || '') > (b.date || '') ? -1 : 0);
+  const SCHEMAS = {
+    allergies: {
+      idKey: 'allergy', noun: 'allergy', empty: 'No allergies added. If you have none, add "No known allergies" so it\'s on record.',
+      fields: [F('name', 'Allergic to', 'text', { required: true, placeholder: 'e.g. Penicillin, peanuts, latex' }), F('reaction', 'Reaction', 'text', { placeholder: 'e.g. hives, swelling' }),
+        F('severity', 'Severity', 'select', { options: ['', 'Mild', 'Moderate', 'Severe'] }), F('notes', 'Notes', 'textarea', { wide: true })],
+      card: a => ({ title: a.name, flag: a.severity === 'Severe' ? 'Severe' : '', sub: [a.reaction, a.severity && a.severity !== 'Severe' ? a.severity : ''].filter(Boolean).join(', '), lines: [a.notes] }),
+    },
+    conditions: {
+      idKey: 'condition', noun: 'condition', empty: 'No health conditions added.',
+      fields: [F('name', 'Condition', 'text', { required: true, wide: true }), F('status', 'Status', 'select', { options: ['Active', 'Resolved'] }),
+        F('since', 'Since', 'date'), F('notes', 'Notes', 'textarea', { wide: true })],
+      sort: (a, b) => (a.status === 'Resolved') - (b.status === 'Resolved') || String(a.name).localeCompare(String(b.name)),
+      card: c => ({ title: c.name, tag: c.status === 'Resolved' ? 'Resolved' : '', dim: c.status === 'Resolved', sub: c.since ? 'Since ' + fmtDate(c.since) : '', lines: [c.notes] }),
+    },
+    medications: {
+      idKey: 'medication', noun: 'medication', empty: 'No medications added yet.',
+      fields: [F('name', 'Medication', 'text', { required: true, wide: true }), F('dose', 'Dose', 'text', { placeholder: 'e.g. 10 mg' }),
+        F('frequency', 'How to take it', 'text', { placeholder: 'e.g. once daily on an empty stomach' }), F('doctor', 'Prescribing doctor', 'text', { list: 'doctor-names' }),
+        F('start', 'Start date', 'date'), F('end', 'End date', 'date'),
+        F('reminderTime', 'Reminder time', 'time'), F('repeat', 'Repeat reminder', 'select', { options: [['', 'No reminder'], ['DAILY', 'Daily'], ['WEEKLY', 'Weekly'], ['ONCE', 'Once (start date only)']] }),
+        F('notes', 'Notes', 'textarea', { wide: true, placeholder: 'e.g. side effects to watch for' }),
+        { section: 'Pharmacy & refills' },
+        F('pharmacy', 'Filled at', 'text', { list: 'pharmacy-names' }), F('rxNumber', 'Rx number'),
+        F('quantity', 'Quantity / days supply'), F('refillsRemaining', 'Refills left', 'number', { min: 0, step: 1 }),
+        F('lastFilled', 'Last filled', 'date'), F('refillDue', 'Next refill due', 'date')],
+      sort: (a, b) => (!!(a.end && a.end < todayIso())) - (!!(b.end && b.end < todayIso())) || String(a.name).localeCompare(String(b.name)),
+      card: m => {
+        const ended = m.end && m.end < todayIso();
+        const dueSoon = m.refillDue && !ended && m.refillDue <= new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10);
+        const url = medCalLink(m);
+        return {
+          title: m.name, dim: ended, tag: ended ? 'Stopped' : '', flag: dueSoon ? 'Refill due ' + fmtDate(m.refillDue) : '',
+          sub: [m.dose, m.frequency].filter(Boolean).join(', '),
+          lines: [m.doctor ? 'Prescribed by ' + m.doctor : '', m.pharmacy ? 'Filled at ' + m.pharmacy + (m.rxNumber ? ', Rx ' + m.rxNumber : '') : '',
+            (m.refillsRemaining ?? '') !== '' && m.refillsRemaining !== null ? m.refillsRemaining + ' refills left' + (m.refillDue && !dueSoon ? ', next due ' + fmtDate(m.refillDue) : '') : (m.refillDue && !dueSoon ? 'Next refill due ' + fmtDate(m.refillDue) : ''),
+            m.start || m.end ? [m.start ? 'Started ' + fmtDate(m.start) : '', m.end ? 'Ends ' + fmtDate(m.end) : ''].filter(Boolean).join(', ') : '', m.notes],
+          links: url ? [{ href: url, text: '📅 Set reminder in Calendar', self: IS_ANDROID }] : [],
+        };
+      },
+    },
+    logs: {
+      idKey: 'log', noun: 'lab entry', empty: 'No lab reports yet. Tap "+ Add lab report (PDF)" or share a report from Labcorp to this app.',
+      fields: [F('date', 'Date', 'date', { required: true, wide: true }), F('wbc', 'WBC (x10⁹/L)', 'number', { step: 'any' }), F('anc', 'ANC (x10⁹/L)', 'number', { step: 'any' }),
+        F('platelets', 'Platelets (x10⁹/L)', 'number', { step: 'any' }), F('hemoglobin', 'Hemoglobin (g/dL)', 'number', { step: 'any' }),
+        F('symptoms', 'How you felt', 'text', { wide: true }), F('notes', 'Notes', 'textarea', { wide: true })],
+      sort: byDateDesc,
+      card: l => {
+        const v = (field, label) => (l[field] === null || l[field] === undefined || l[field] === '') ? '' : `<span${inRange(field, l[field]) ? '' : ' class="out-of-range"'}>${label} ${escapeHtml(l[field])}</span>`;
+        const vals = [v('wbc', 'WBC'), v('anc', 'ANC'), v('platelets', 'Platelets'), v('hemoglobin', 'Hgb')].filter(Boolean).join('');
+        return { title: fmtDate(l.date), html: vals ? `<div class="rec-vals">${vals}</div>` : '', lines: [l.symptoms, l.notes] };
+      },
+    },
+    testResults: {
+      idKey: 'testResult', noun: 'test result', empty: 'No test results yet.',
+      fields: [F('date', 'Date', 'date', { required: true }), F('type', 'Type', 'select', { options: ['', 'Lab / bloodwork', 'X-ray', 'CT scan', 'MRI', 'PET scan', 'Ultrasound', 'Biopsy', 'Pathology', 'Other'] }),
+        F('description', 'Test name or area', 'text', { wide: true, placeholder: 'e.g. chest X-ray, knee MRI' }), F('orderedBy', 'Ordered by', 'text', { list: 'doctor-names' }),
+        F('followup', 'Follow-up needed', 'checkbox'), F('result', 'Result / impression', 'textarea', { wide: true }), F('notes', 'Notes', 'textarea', { wide: true })],
+      sort: byDateDesc,
+      card: t => {
+        const rows = Array.isArray(t.rows) && t.rows.length ? t.rows : (t.result && (!t.type || /Lab|BCR/i.test(t.type)) ? parseLabRows(t.result) : []);
+        const anyFlag = rows.some(r => r.flag);
+        let html = '';
+        if (t.pdfId) {
+          // Report with the original attached: keep it clean, just the original.
+          const flagged = rows.filter(r => r.flag).length;
+          return { title: (t.description || 'Lab report').replace(/ – .*$/, ''), flag: t.followup ? 'Follow-up' : (flagged ? flagged + ' out of range' : ''),
+            sub: fmtDate(t.date), html: `<button type="button" class="ghost view-pdf" data-pdf="${escapeHtml(t.pdfId)}">📄 View original report</button>`,
+            long: '', lines: [t.notes && t.notes !== 'Added from a shared or picked report' ? t.notes : ''] };
+        }
+        if (rows.length) {
+          html += `<div class="lab-wrap"><table class="lab-table"><thead><tr><th>Test</th><th>Result</th><th>Normal range</th><th>Units</th></tr></thead><tbody>${
+            rows.map(r => `<tr${r.flag ? ' class="flagged"' : ''}><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.value)}${r.flag ? ' ' + escapeHtml(r.flag) : ''}</td><td>${escapeHtml(r.range || '')}</td><td>${escapeHtml(r.units || '')}</td></tr>`).join('')
+          }</tbody></table></div>`;
+          if (t.result) html += `<details class="lab-extra"><summary>Full report text (everything on the page)</summary><div class="rec-pre" style="margin-top:8px">${escapeHtml(t.result)}</div></details>`;
+        }
+        if (t.pdfId) html += `<button type="button" class="ghost view-pdf" data-pdf="${escapeHtml(t.pdfId)}">📄 View original report</button>`;
+        return { title: t.description || t.type || 'Test result', flag: t.followup ? 'Follow-up' : ((anyFlag || /\[(H|HH|L|LL|A|AA)\]/.test(t.result || '')) ? 'Out of range' : ''),
+          sub: [fmtDate(t.date), t.type, t.orderedBy ? 'ordered by ' + t.orderedBy : '', rows.length ? rows.length + ' results' : ''].filter(Boolean).join(', '),
+          html, long: rows.length ? '' : t.result, lines: [t.notes] };
+      },
+    },
+    symptoms: {
+      idKey: 'symptom', noun: 'entry', empty: 'No symptom entries yet.',
+      fields: [F('date', 'Date', 'date', { required: true }), F('time', 'Time', 'time'), F('temp', 'Temperature (°F)', 'number', { step: '0.1' }),
+        F('severity', 'Severity', 'select', { options: ['', 'Mild', 'Moderate', 'Severe'] }), F('symptoms', 'Symptoms', 'textarea', { wide: true }), F('notes', 'Notes', 'textarea', { wide: true, placeholder: 'What you did about it, who you called' })],
+      sort: (a, b) => byDateDesc(a, b) || ((a.time || '') < (b.time || '') ? 1 : -1),
+      card: s => ({ title: fmtDate(s.date) + (s.time ? ', ' + s.time : ''), flag: (s.temp !== null && s.temp !== undefined && s.temp !== '' && s.temp >= FEVER_THRESHOLD_F) ? s.temp + '°F' : '',
+        sub: [s.temp !== null && s.temp !== undefined && s.temp !== '' && !(s.temp >= FEVER_THRESHOLD_F) ? s.temp + '°F' : '', s.severity].filter(Boolean).join(', '), lines: [s.symptoms, s.notes] }),
+    },
+    appointments: {
+      idKey: 'appt', noun: 'appointment', empty: 'No appointments yet.',
+      fields: [F('date', 'Date', 'date', { required: true }), F('time', 'Time', 'time'), F('provider', 'With', 'text', { list: 'doctor-names' }),
+        F('location', 'Where', 'text', { wide: true, placeholder: 'e.g. clinic name or address' }), F('notes', 'What it\'s for', 'textarea', { wide: true })],
+      sort: (a, b) => { const t = todayIso(); const pa = (a.date || '') < t, pb = (b.date || '') < t; return pa - pb || (pa ? byDateDesc(a, b) : -byDateDesc(a, b)); },
+      card: a => ({ title: fmtDate(a.date) + (a.time ? ', ' + fmtTime(a.time) : ''), tag: (a.date || '') >= todayIso() ? 'Upcoming' : '', dim: (a.date || '') < todayIso(),
+        sub: [a.provider, a.location].filter(Boolean).join(' · '), lines: [a.notes],
+        links: (a.date || '') >= todayIso() ? [{ href: apptCalLink(a), text: '📅 Add to Calendar', self: IS_ANDROID }].concat(a.location ? [{ href: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(a.location), text: '📍 Map' }] : []) : [] }),
+    },
+    insurance: {
+      idKey: 'insurance', noun: 'insurance plan', empty: 'No insurance plans added yet.',
+      fields: [F('payer', 'Insurance company', 'text', { required: true }), F('planType', 'Plan type', 'text', { placeholder: 'e.g. Medicare, PPO' }),
+        F('memberId', 'Member ID'), F('group', 'Group number'), F('phone', 'Phone', 'tel'), F('website', 'Website', 'text', { inputmode: 'url' }),
+        F('effective', 'Effective date', 'date'), F('renewal', 'Renewal date', 'date'), F('pcp', 'Primary care provider', 'text', { wide: true, list: 'doctor-names' }),
+        F('notes', 'Notes', 'textarea', { wide: true, placeholder: 'e.g. prior authorizations and what they cover' })],
+      card: i => ({ title: i.payer, sub: [i.planType, i.memberId ? 'Member ID ' + i.memberId : '', i.group ? 'Group ' + i.group : ''].filter(Boolean).join(', '),
+        lines: [i.pcp ? 'PCP: ' + i.pcp : '', i.effective ? 'Effective ' + fmtDate(i.effective) + (i.renewal ? ', renews ' + fmtDate(i.renewal) : '') : '', i.notes && !/^Payer phone /.test(i.notes) ? i.notes : ''],
+        phone: i.phone || (((i.notes || '').match(/(\+?1?[-. (]*\d{3}[-. )]*\d{3}[-. ]*\d{4})/) || [])[1] || ''), website: i.website }),
+    },
+    pharmacies: {
+      idKey: 'pharmacy', noun: 'pharmacy', empty: 'No pharmacies added yet.',
+      fields: [F('name', 'Pharmacy name', 'text', { required: true }), F('type', 'Type', 'select', { options: ['', 'Retail', 'Specialty', 'Mail-order', 'Hospital outpatient', 'Compounding', 'Other'] }),
+        F('phone', 'Phone', 'tel'), F('fax', 'Fax', 'tel'), F('address', 'Address', 'text', { wide: true }), F('hours', 'Hours', 'text', { placeholder: 'e.g. Mon–Fri 9–7' }),
+        F('website', 'Website', 'text', { inputmode: 'url' }), F('notes', 'Notes', 'textarea', { wide: true })],
+      card: p => ({ title: p.name, sub: [p.type, p.hours].filter(Boolean).join(', '), lines: [p.address, p.fax ? 'Fax ' + p.fax : '', p.notes], phone: p.phone, website: p.website }),
+    },
+    doctors: {
+      idKey: 'doctor', noun: 'provider', empty: 'No providers added yet.',
+      fields: [F('name', 'Name', 'text', { required: true }), F('specialty', 'Specialty', 'text', { placeholder: 'e.g. Oncologist, PCP, Dentist' }),
+        F('practice', 'Practice / clinic'), F('phone', 'Phone', 'tel'), F('address', 'Address', 'text', { wide: true }), F('website', 'Website / portal', 'text', { wide: true, inputmode: 'url' }),
+        F('notes', 'Notes', 'textarea', { wide: true, placeholder: 'e.g. prefers messages through the portal' })],
+      card: d => ({ title: d.name, sub: [d.specialty, d.practice].filter(Boolean).join(', '), lines: [d.address, d.notes], phone: d.phone, website: d.website }),
+    },
+    visits: {
+      idKey: 'visit', noun: 'visit', empty: 'No visits yet.',
+      fields: [F('date', 'Date', 'date', { required: true }), F('provider', 'Provider', 'text', { list: 'doctor-names' }), F('reason', 'Reason for visit', 'text', { wide: true }),
+        F('summary', 'What was discussed', 'textarea', { wide: true }), F('followup', 'Follow-up needed', 'text', { wide: true, placeholder: 'e.g. labs in 2 weeks' })],
+      sort: byDateDesc,
+      card: v => ({ title: v.reason || 'Visit', sub: [fmtDate(v.date), v.provider].filter(Boolean).join(', '), long: v.summary, lines: [v.followup ? 'Follow-up: ' + v.followup : ''] }),
+    },
+    caseManagers: {
+      idKey: 'caseManager', noun: 'case manager', empty: 'No case manager added yet.',
+      fields: [F('name', 'Name', 'text', { required: true }), F('org', 'Organization / plan'), F('phone', 'Phone', 'tel'), F('email', 'Email', 'email'), F('notes', 'Notes', 'textarea', { wide: true })],
+      card: c => ({ title: c.name, sub: c.org, lines: [c.notes], phone: c.phone, email: c.email }),
+    },
+    supportContacts: {
+      idKey: 'support', noun: 'contact', empty: 'No support contacts added yet.',
+      fields: [F('name', 'Name', 'text', { required: true }), F('relationship', 'Relationship', 'text', { placeholder: 'e.g. sister, neighbor' }),
+        F('phone', 'Phone', 'tel'), F('email', 'Email', 'email'), F('helpsWith', 'How they help', 'text', { wide: true, placeholder: 'e.g. rides to appointments' }),
+        F('emergency', 'Emergency contact', 'checkbox'), F('notes', 'Notes', 'textarea', { wide: true })],
+      sort: (a, b) => (!!b.emergency) - (!!a.emergency),
+      card: c => ({ title: c.name, tag: c.emergency ? 'Emergency contact' : '', sub: [c.relationship, c.helpsWith].filter(Boolean).join(', '), lines: [c.notes], phone: c.phone, email: c.email }),
+    },
+    orgs: {
+      idKey: 'org', noun: 'organization', empty: 'No organizations added yet.',
+      fields: [F('name', 'Name', 'text', { required: true, placeholder: 'e.g. Blood Cancer United' }), F('type', 'Type', 'select', { options: ['Nonprofit / foundation', 'Support group', 'Helpline', 'Financial help', 'Other'] }),
+        F('phone', 'Phone', 'tel'), F('website', 'Website', 'text', { inputmode: 'url' }), F('helps', 'What they help with', 'text', { wide: true })],
+      card: o => ({ title: o.name, sub: [o.type, o.helps].filter(Boolean).join(', '), phone: o.phone, website: o.website }),
+    },
+    quickLinks: {
+      idKey: 'link', noun: 'link', empty: '',
+      fields: [F('name', 'Name', 'text', { placeholder: 'e.g. MyChart, Labcorp, Medicare' }), F('url', 'Website', 'text', { wide: true, inputmode: 'url', placeholder: 'optional' }),
+        F('phone', 'Phone', 'tel', { placeholder: 'optional' }),
+        F('appName', 'App on your phone', 'text', { wide: true, list: 'known-apps', placeholder: 'optional, e.g. Call the Car' })],
+      sort: (a, b) => String(a.name || '').localeCompare(String(b.name || '')),
+      beforeSave: v => {
+        if (v.url && !v.phone && /^[\d\s().+-]{7,}$/.test(v.url) && v.url.replace(/\D/g, '').length >= 7) { v.phone = v.url; v.url = ''; }
+        const app = resolveApp(v.appName);
+        v.appId = app ? app.id : '';
+        if (app && (/^https?:/i.test(v.appName) || app.id === v.appName)) v.appName = app.name || app.id;
+        if (!v.name) v.name = app ? (app.name || v.appName) : '';
+        if (!v.name) return 'Add a name for this link.';
+        if (!v.url && !v.phone && !v.appName) return 'Add a website, a phone number, or an app.';
+        return null;
+      },
+      card: l => { const h = appHref(l.appId, l.appName); return { title: l.name, phone: l.phone, website: l.url, links: h ? [{ href: h, text: '📱 Open app', self: true }] : [] }; },
+    },
+    places: {
+      idKey: 'place', noun: 'place', empty: '',
+      fields: [F('name', 'Name', 'text', { required: true, placeholder: 'e.g. Green Medical' }), F('kind', 'Kind of place', 'select', { options: ['Lab', 'Hospital', 'Clinic / medical office', 'Urgent care', 'Imaging center', 'Other'] }),
+        F('phone', 'Phone', 'tel'), F('website', 'Website', 'text', { inputmode: 'url' }), F('address', 'Address', 'text', { wide: true })],
+      card: p => ({ title: p.name, sub: p.address, phone: p.phone, website: p.website }),
+    },
+  };
+
+  function ensureCollection(col) {
+    if (!Array.isArray(store[col])) store[col] = [];
+    const k = SCHEMAS[col].idKey;
+    if (!store.nextIds) store.nextIds = {};
+    if (!Number.isFinite(store.nextIds[k])) store.nextIds[k] = store[col].reduce((m, x) => Math.max(m, x.id || 0), 0) + 1;
+  }
+
+  function recordCard(col, item, opts) {
+    const c = SCHEMAS[col].card(item);
+    const actions = [];
+    const tel = c.phone ? telHref(c.phone) : null;
+    if (tel) actions.push(`<a href="${tel}">📞 ${escapeHtml(c.phone)}</a>`);
+    const web = webHref(c.website);
+    if (web) actions.push(`<a href="${escapeHtml(web)}" target="_blank" rel="noopener">🌐 Website</a>`);
+    if (c.email) actions.push(`<a href="mailto:${escapeHtml(c.email)}">✉️ Email</a>`);
+    (c.links || []).forEach(l => actions.push(`<a href="${escapeHtml(l.href)}"${l.self ? '' : ' target="_blank" rel="noopener"'}>${escapeHtml(l.text)}</a>`));
+    const compact = !!(opts && opts.directory);
+    let long = '';
+    if (c.long && !compact) {
+      const text = String(c.long);
+      const short = text.length > 260 && !(opts && opts.compact === false);
+      long = short
+        ? `<div class="rec-lines rec-pre" data-full="${escapeHtml(text)}">${escapeHtml(text.slice(0, 240).replace(/\s+\S*$/, ''))}…</div><button type="button" class="rec-more">Show more</button>`
+        : `<div class="rec-lines rec-pre">${escapeHtml(text)}</div>`;
+    }
+    const lines = (compact ? [] : (c.lines || [])).filter(Boolean).map(l => `<div>${escapeHtml(l)}</div>`).join('');
+    return `<div class="rec-card${c.dim ? ' dim' : ''}${actions.length ? ' has-actions' : ''}">
+      <div class="rec-main">
+        <div class="rec-title">${escapeHtml(c.title || '')}${c.flag ? `<span class="rec-flag">${escapeHtml(c.flag)}</span>` : ''}${c.tag ? `<span class="rec-tag">${escapeHtml(c.tag)}</span>` : ''}</div>
+        ${c.sub ? `<div class="rec-sub">${escapeHtml(c.sub)}</div>` : ''}
+        ${c.html || ''}${long}${lines ? `<div class="rec-lines">${lines}</div>` : ''}
+      </div>
+      <div class="rec-side">
+        <div class="rec-btns"><button type="button" class="rec-edit" data-col="${col}" data-id="${item.id}" aria-label="Edit ${escapeHtml(c.title || SCHEMAS[col].noun)}">Edit</button><button type="button" class="rec-del" data-col="${col}" data-id="${item.id}" aria-label="Delete ${escapeHtml(c.title || SCHEMAS[col].noun)}">Delete</button></div>
+        ${actions.length ? `<div class="dir-actions">${actions.join('')}</div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  function renderCollection(col) {
+    const wrap = document.getElementById('list-' + col);
+    if (col === 'doctors') { const dl = document.getElementById('doctor-names'); if (dl) dl.innerHTML = (store.doctors || []).map(d => `<option value="${escapeHtml(d.name)}">`).join(''); }
+    if (col === 'pharmacies') { const dl = document.getElementById('pharmacy-names'); if (dl) dl.innerHTML = (store.pharmacies || []).map(p => `<option value="${escapeHtml(p.name)}">`).join(''); }
+    if (!wrap) return;
+    const sch = SCHEMAS[col];
+    const items = [...(store[col] || [])];
+    if (sch.sort) items.sort(sch.sort);
+    if (!items.length) { wrap.innerHTML = `<div class="empty-state">${escapeHtml(sch.empty)}</div>`; return; }
+    const LIMIT = 5;
+    const expanded = expandedLists.has(col) || items.length <= LIMIT + 1;
+    wrap.innerHTML = (expanded ? items : items.slice(0, LIMIT)).map(it => recordCard(col, it)).join('')
+      + (items.length > LIMIT + 1 ? `<button type="button" class="list-toggle" data-toggle="${col}">${expanded ? 'Show fewer' : `Show all ${items.length}`}</button>` : '');
+  }
+  const expandedLists = new Set();
+  document.addEventListener('click', e => {
+    const t = e.target.closest('.list-toggle');
+    if (!t) return;
+    const col = t.dataset.toggle;
+    if (expandedLists.has(col)) expandedLists.delete(col); else expandedLists.add(col);
+    renderCollection(col);
+  });
+
+  // names the rest of the app already calls
+  // Latest item shown; everything older sits behind a "Look up past results" button.
+  const pastOpen = new Set();
+  const isLabReport = t => !!t.pdfId || t.type === 'Lab / bloodwork';
+  function renderLatestWithPast(wrapId, key, groups, emptyMsg) {
+    const wrap = document.getElementById(wrapId);
+    if (!wrap) return;
+    const all = [];
+    groups.forEach(g => g.items.forEach(it => all.push({ col: g.col, it })));
+    all.sort((a, b) => ((a.it.date || '') > (b.it.date || '') ? -1 : 1));
+    if (!all.length) { wrap.innerHTML = `<div class="empty-state">${escapeHtml(emptyMsg)}</div>`; return; }
+    const latest = all[0], past = all.slice(1);
+    let html = recordCard(latest.col, latest.it);
+    if (past.length) {
+      const open = pastOpen.has(key);
+      html += `<button type="button" class="ghost past-toggle" data-past="${key}" style="margin-top:10px">${open ? 'Hide past results' : `🔎 Look up past results (${past.length})`}</button>`;
+      if (open) html += `<div style="margin-top:10px">${past.map(x => recordCard(x.col, x.it)).join('')}</div>`;
+    }
+    wrap.innerHTML = html;
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.past-toggle');
+    if (!b) return;
+    const k = b.dataset.past;
+    if (pastOpen.has(k)) pastOpen.delete(k); else pastOpen.add(k);
+    k === 'lab' ? renderLogTable() : renderTestResults();
+  });
+  function renderLogTable() {
+    ensureCollection('logs'); ensureCollection('testResults');
+    const reports = store.testResults.filter(isLabReport);
+    const reportDates = new Set(reports.map(r => r.date));
+    // Blood-count entries that already have a full report on the same date are covered by that report.
+    const countsOnly = store.logs.filter(l => !reportDates.has(l.date));
+    renderLatestWithPast('list-logs', 'lab', [{ col: 'testResults', items: reports }, { col: 'logs', items: countsOnly }],
+      'No lab reports yet. Tap "+ Add lab report (PDF)" or share a report from Labcorp to this app.');
+  }
+  function renderAppointments() { renderCollection('appointments'); }
+  function renderInsurance() { renderCollection('insurance'); }
+  function renderDoctors() { renderCollection('doctors'); }
+  function renderVisits() { renderCollection('visits'); }
+  function renderTestResults() {
+    ensureCollection('testResults');
+    renderLatestWithPast('list-testResults', 'tests', [{ col: 'testResults', items: store.testResults.filter(t => !isLabReport(t)) }], 'No other test results yet.');
+  }
+  function renderSymptoms() { renderCollection('symptoms'); }
+  function renderMedications() { renderCollection('medications'); }
+  function renderPharmacies() { renderCollection('pharmacies'); }
+  function renderCaseManagers() { renderCollection('caseManagers'); }
+  function renderSupportContacts() { renderCollection('supportContacts'); renderCollection('orgs'); }
+  function renderHealthSummary() { renderCollection('allergies'); renderCollection('conditions'); }
+
+  function renderDirectory() {
+    const wrap = document.getElementById('directory-wrap');
+    if (!wrap) return;
+    const KIND_ORDER = ['Lab', 'Hospital', 'Clinic / medical office', 'Urgent care', 'Imaging center', 'Other'];
+    const KIND_LABEL = { 'Lab': 'Labs', 'Hospital': 'Hospitals', 'Clinic / medical office': 'Clinics & medical offices', 'Urgent care': 'Urgent care', 'Imaging center': 'Imaging centers', 'Other': 'Other places' };
+    const groups = [];
+    const add = (label, col, items) => { if (items && items.length) groups.push(`<div class="dir-group"><h4>${escapeHtml(label)}</h4>${items.map(it => recordCard(col, it, { directory: true })).join('')}</div>`); };
+    add('Doctors & providers', 'doctors', store.doctors);
+    ensureCollection('quickLinks');
+    if (!store.linksSeeded) {
+      // Medicare / Medi-Cal used to be fixed links; now they're normal entries you can edit or delete.
+      [{ name: 'Medicare', url: 'https://www.medicare.gov', phone: '800-633-4227' }, { name: 'Medi-Cal', url: 'https://www.dhcs.ca.gov/services/medi-cal', phone: '800-541-5555' }]
+        .forEach(b => { if (!store.quickLinks.some(l => l.name === b.name)) store.quickLinks.push(Object.assign({ id: store.nextIds.link++ }, b)); });
+      store.linksSeeded = true; saveStore();
+    }
+    store.quickLinks.forEach(l => { if (l.url && !l.phone && /^[\d\s().+-]{7,}$/.test(l.url) && l.url.replace(/\D/g, '').length >= 7) { l.phone = l.url; l.url = ''; } });
+    store.quickLinks.forEach(l => { if (l.appId && !l.appName) l.appName = (KNOWN_APPS.find(a => a.id === l.appId) || {}).name || l.appId; });
+    const appList = document.getElementById('known-apps');
+    if (appList && !appList.children.length) appList.innerHTML = KNOWN_APPS.map(a => `<option value="${escapeHtml(a.name)}">`).join('');
+    add('Websites & quick links', 'quickLinks', [...store.quickLinks].sort(SCHEMAS.quickLinks.sort));
+    KIND_ORDER.forEach(kind => add(KIND_LABEL[kind], 'places', (store.places || []).filter(pl => (KIND_ORDER.includes(pl.kind) ? pl.kind : 'Other') === kind)));
+    add('Pharmacies', 'pharmacies', store.pharmacies);
+    add('Insurance', 'insurance', store.insurance);
+    add('Case manager', 'caseManagers', store.caseManagers);
+    add('Organizations & support groups', 'orgs', store.orgs);
+    add('Support contacts', 'supportContacts', [...(store.supportContacts || [])].sort(SCHEMAS.supportContacts.sort));
+    wrap.innerHTML = groups.length ? groups.join('') : '<div class="empty-state">Nothing here yet. Add a place above, or add doctors, pharmacies, and contacts in the other tabs.</div>';
+  }
+
+  // shared add/edit window
+  let openRecordEditor = null;
+  (function initEditor() {
+    const overlay = document.getElementById('edit-overlay');
+    const form = document.getElementById('edit-form');
+    const fieldsWrap = document.getElementById('edit-fields');
+    const title = document.getElementById('edit-title');
+    const delBtn = document.getElementById('edit-delete');
+    const errEl = document.getElementById('edit-error');
+    let current = null; // { col, id }
+    let lastFocus = null;
+
+    function fieldHtml(f, val, i) {
+      if (f.section) return `<div class="edit-section">${escapeHtml(f.section)}</div>`;
+      const id = 'ef-' + i;
+      const wide = f.wide || f.type === 'textarea' ? ' wide' : '';
+      const common = `id="${id}" name="${f.key}"${f.required ? ' required' : ''}${f.placeholder ? ` placeholder="${escapeHtml(f.placeholder)}"` : ''}`;
+      if (f.type === 'checkbox') return `<label class="check${wide}"><input type="checkbox" ${common}${val ? ' checked' : ''}> ${escapeHtml(f.label)}</label>`;
+      let input;
+      if (f.type === 'select') {
+        const opts = f.options.map(o => Array.isArray(o) ? o : [o, o || '—']);
+        const has = opts.some(([v]) => v === (val ?? ''));
+        input = `<select ${common}>${(!has && val ? [[val, val]] : []).concat(opts).map(([v, t]) => `<option value="${escapeHtml(v)}"${String(val ?? '') === v ? ' selected' : ''}>${escapeHtml(t)}</option>`).join('')}</select>`;
+      } else if (f.type === 'textarea') {
+        input = `<textarea ${common}>${escapeHtml(val ?? '')}</textarea>`;
+      } else {
+        const extra = [f.list ? `list="${f.list}"` : '', f.step !== undefined ? `step="${f.step}"` : '', f.min !== undefined ? `min="${f.min}"` : '', f.inputmode ? `inputmode="${f.inputmode}"` : '', f.type === 'number' ? 'inputmode="decimal"' : ''].filter(Boolean).join(' ');
+        input = `<input type="${f.type}" ${common} ${extra} value="${escapeHtml(val ?? '')}">`;
+      }
+      const showIf = f.showIf ? ` data-show-key="${f.showIf[0]}" data-show-val="${escapeHtml(f.showIf[1])}"` : '';
+      return `<div class="${wide.trim()}"${showIf}><label for="${id}">${escapeHtml(f.label)}${f.required ? ' *' : ''}</label>${input}</div>`;
+    }
+
+    function open(col, id, prefill) {
+      const sch = SCHEMAS[col];
+      ensureCollection(col);
+      const item = id ? store[col].find(x => x.id === id) : null;
+      if (id && !item) return;
+      current = { col, id: item ? item.id : null };
+      const noun = sch.noun;
+      title.textContent = item ? `Edit ${noun}` : `Add ${/^[aeiou]/i.test(noun) ? 'an' : 'a'} ${noun}`;
+      const defaults = {};
+      if (!item) sch.fields.forEach(f => { if (f.type === 'date' && f.required) defaults[f.key] = todayIso(); if (f.type === 'select' && f.options && !f.options.includes('')) defaults[f.key] = Array.isArray(f.options[0]) ? f.options[0][0] : f.options[0]; });
+      if (!item && prefill) Object.assign(defaults, prefill);
+      fieldsWrap.innerHTML = sch.fields.map((f, i) => fieldHtml(f, item ? item[f.key] : defaults[f.key], i)).join('');
+      applyShowIf();
+      delBtn.style.display = item ? '' : 'none';
+      errEl.textContent = '';
+      lastFocus = document.activeElement;
+      overlay.hidden = false;
+      document.body.classList.add('modal-open');
+      const first = fieldsWrap.querySelector('input:not([type=checkbox]), select, textarea');
+      if (first && !item) setTimeout(() => first.focus(), 30);
+      else overlay.querySelector('.modal').focus?.();
+    }
+    function applyShowIf() {
+      fieldsWrap.querySelectorAll('[data-show-key]').forEach(box => {
+        const src = fieldsWrap.querySelector(`[name="${box.dataset.showKey}"]`);
+        box.hidden = !src || src.value !== box.dataset.showVal;
+      });
+    }
+    fieldsWrap.addEventListener('change', e => {
+      const key = e.target && e.target.name;
+      if (!key || !current) return;
+      const sch = SCHEMAS[current.col];
+      if (sch.onChange) sch.onChange(key, fieldsWrap);
+      applyShowIf();
+    });
+    function close() {
+      overlay.hidden = true;
+      document.body.classList.remove('modal-open');
+      current = null;
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+    function afterChange(col) {
+      saveStore();
+      renderAll();
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      if (!current) return;
+      const { col } = current;
+      const sch = SCHEMAS[col];
+      const vals = {};
+      let missing = null;
+      sch.fields.forEach((f, i) => {
+        if (f.section) return;
+        const el = document.getElementById('ef-' + i);
+        if (f.type === 'checkbox') vals[f.key] = el.checked;
+        else if (f.type === 'number') { const v = el.value.trim(); vals[f.key] = v === '' ? null : parseFloat(v); }
+        else vals[f.key] = el.value.trim();
+        if (f.required && (vals[f.key] === '' || vals[f.key] === null) && !missing) missing = { f, el };
+      });
+      if (missing) { errEl.textContent = `Please fill in "${missing.f.label}".`; missing.el.focus(); return; }
+      if (sch.beforeSave) { const err = sch.beforeSave(vals); if (err) { errEl.textContent = err; return; } }
+      ensureCollection(col);
+      if (current.id) {
+        const item = store[col].find(x => x.id === current.id);
+        if (item) Object.assign(item, vals);
+      } else {
+        store[col].push(Object.assign({ id: store.nextIds[sch.idKey]++ }, vals));
+      }
+      close();
+      afterChange(col);
+    });
+    delBtn.addEventListener('click', () => {
+      if (!current || !current.id) return;
+      const { col, id } = current;
+      const item = store[col].find(x => x.id === id);
+      const name = item ? (SCHEMAS[col].card(item).title || SCHEMAS[col].noun) : SCHEMAS[col].noun;
+      if (!confirm(`Delete ${name}? This can't be undone.`)) return;
+      store[col] = store[col].filter(x => x.id !== id);
+      if (item && item.pdfId) pdfFiles.del(item.pdfId).catch(() => {});
+      close();
+      afterChange(col);
+    });
+    openRecordEditor = open;
+    document.getElementById('edit-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !overlay.hidden) close(); });
+    document.addEventListener('click', e => {
+      const addBtn = e.target.closest('[data-add]');
+      if (addBtn && SCHEMAS[addBtn.dataset.add]) { open(addBtn.dataset.add); return; }
+      const del = e.target.closest('.rec-del');
+      if (del) {
+        const col = del.dataset.col, id = +del.dataset.id;
+        const item = (store[col] || []).find(x => x.id === id);
+        if (!item) return;
+        const name = SCHEMAS[col].card(item).title || SCHEMAS[col].noun;
+        if (!confirm(`Delete ${name}? This can't be undone.`)) return;
+        store[col] = store[col].filter(x => x.id !== id);
+        if (item.pdfId) pdfFiles.del(item.pdfId).catch(() => {});
+        saveStore();
+        renderAll();
+        showToast(`Deleted ${name}.`);
+        return;
+      }
+      const edit = e.target.closest('.rec-edit');
+      if (edit) { open(edit.dataset.col, Number(edit.dataset.id)); return; }
+      const more = e.target.closest('.rec-more');
+      if (more) {
+        const box = more.previousElementSibling;
+        if (box && box.dataset.full) { box.textContent = box.dataset.full; delete box.dataset.full; more.remove(); }
+      }
+    });
+  })();
+
+  // ---------- calendar (Home) ----------
+  const calState = { y: new Date().getFullYear(), m: new Date().getMonth(), sel: null };
+  function calEvents() {
+    const ev = {};
+    const add = (d, kind, text, goto) => { if (!d) return; (ev[d] = ev[d] || []).push({ kind, text, goto }); };
+    (store.appointments || []).forEach(a => add(a.date, 'appt', (a.time ? fmtTime(a.time) + ' – ' : '') + 'Appointment' + (a.provider ? ' with ' + a.provider : '') + (a.location ? ' · ' + a.location : ''), 'tracker'));
+    (store.logs || []).forEach(l => add(l.date, 'lab', 'Blood counts logged', 'tracker'));
+    (store.testResults || []).forEach(t => add(t.date, 'lab', (t.description || t.type || 'Test result').replace(/ – .*$/, ''), 'tracker'));
+    (store.medications || []).forEach(m => add(m.refillDue, 'refill', 'Refill due: ' + m.name, 'tracker'));
+    return ev;
+  }
+  function renderCalendar() {
+    const grid = document.getElementById('cal-grid');
+    if (!grid) return;
+    const { y, m } = calState;
+    document.getElementById('cal-title').textContent = new Date(y, m, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    const ev = calEvents();
+    const first = new Date(y, m, 1).getDay(), days = new Date(y, m + 1, 0).getDate();
+    const iso = d => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    let html = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => `<div class="dow">${d}</div>`).join('');
+    for (let i = 0; i < first; i++) html += '<div class="cal-cell blank"></div>';
+    for (let d = 1; d <= days; d++) {
+      const k = iso(d), list = ev[k] || [];
+      const kinds = [...new Set(list.map(e => e.kind))];
+      html += `<button type="button" class="cal-cell${k === todayIso() ? ' today' : ''}${k === calState.sel ? ' sel' : ''}" data-day="${k}" aria-label="${k}${list.length ? ', ' + list.length + ' items' : ''}"><span class="n">${d}</span><span class="dots">${kinds.map(x => `<i class="dot ${x}"></i>`).join('')}</span></button>`;
+    }
+    grid.innerHTML = html;
+    const dayEl = document.getElementById('cal-day');
+    if (calState.sel && ev[calState.sel]) {
+      dayEl.innerHTML = `<strong>${escapeHtml(fmtDate(calState.sel))}</strong>` + ev[calState.sel].map(e => `<div class="item"><i class="dot ${e.kind}" style="margin-right:6px"></i>${escapeHtml(e.text)}</div>`).join('');
+    } else if (calState.sel) {
+      dayEl.innerHTML = `<strong>${escapeHtml(fmtDate(calState.sel))}</strong><div class="item" style="color:var(--muted)">Nothing on this day.</div>`;
+    } else dayEl.innerHTML = '<span style="color:var(--muted)">Tap a day to see what\'s on it.</span>';
+  }
+  document.addEventListener('click', e => {
+    const nav = e.target.closest('.cal-nav');
+    if (nav) { calState.m += +nav.dataset.cal; if (calState.m < 0) { calState.m = 11; calState.y--; } if (calState.m > 11) { calState.m = 0; calState.y++; } renderCalendar(); return; }
+    const cell = e.target.closest('.cal-cell[data-day]');
+    if (cell) { calState.sel = cell.dataset.day; renderCalendar(); return; }
+    if (e.target.closest('#cal-add-appt')) openRecordEditor('appointments', null, calState.sel ? { date: calState.sel } : null);
+  });
+
+  function renderAll() {
+    renderCalendar();
+    renderHealthSummary();
+    renderLogTable(); renderAppointments(); renderInsurance(); renderDoctors(); renderVisits(); renderSymptoms();
+    renderMedications(); renderCaseManagers(); renderPharmacies(); renderSupportContacts(); renderDirectory();
+    renderTestResults(); renderRecentResults(); renderDueToday();
+  }
+
+
+  // ---------- original report files (kept on this device, IndexedDB) ----------
+  const pdfFiles = (function () {
+    let dbp = null;
+    function db() {
+      if (!dbp) dbp = new Promise((res, rej) => {
+        const r = indexedDB.open('mmh-files', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('pdfs');
+        r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+      });
+      return dbp;
+    }
+    const tx = (mode, fn) => db().then(d => new Promise((res, rej) => { const t = d.transaction('pdfs', mode); const out = fn(t.objectStore('pdfs')); t.oncomplete = () => res(out && out.result !== undefined ? out.result : undefined); t.onerror = () => rej(t.error); }));
+    return {
+      put: (id, blob) => tx('readwrite', st => st.put(blob, id)),
+      get: id => tx('readonly', st => st.get(id)),
+      del: id => tx('readwrite', st => st.delete(id)),
+      all: () => db().then(d => new Promise((res, rej) => {
+        const out = {}; const t = d.transaction('pdfs', 'readonly'); const c = t.objectStore('pdfs').openCursor();
+        c.onsuccess = () => { const cur = c.result; if (cur) { out[cur.key] = cur.value; cur.continue(); } };
+        t.oncomplete = () => res(out); t.onerror = () => rej(t.error);
+      })),
+    };
+  })();
+
+  // Every result line on a lab report: test name, result, flag, units, normal range.
+  function parseLabRows(text) {
+    const rows = [];
+    const unitRe = /(\/|%|^(?:fL|pg|g\/dL|mg\/dL|mmol\/L|U\/L|IU\/L|mIU\/L|ng\/mL|ug\/dL|uIU\/mL|sec|ratio|Index|cells\/uL|x10E3\/uL|x10E6\/uL|mEq\/L|mL\/min\/1\.73)$)/i;
+    const rangeRe = /^(?:[<>]=?\s*-?\d[\d.,]*|-?\d[\d.,]*\s*-\s*-?\d[\d.,]*|Negative|Not Detected|None seen|Normal)$/i;
+    const flagRe = /^(High|Low|H|L|HH|LL|Abnormal|A|AA|Critical|Alert)$/i;
+    const valRe = /^(?:[<>]=?\s*)?-?\d[\d,]*(?:\.\d+)?$|^(?:Negative|Positive|Not Detected|Detected|None seen|Reactive|Non[- ]?Reactive|Trace|Few|Rare|Many|Clear|Cloudy|Yellow|Present|Absent)$/i;
+    const skipName = /^(Test|Tests Ordered|Current Result and Flag|Previous Result and Date|Units|Reference Interval|Page|Patient|Date|Specimen|Account|Phone|Ordering|Physician|Collected|Received|Reported|Lab|Result|Flag|DOB|Age|Sex)\b/i;
+    String(text || '').split(/\r?\n/).forEach(line => {
+      const one = oneLineRow(line);
+      if (one) { if (!rows.some(r => r.name === one.name && r.value === one.value)) rows.push(one); return; }
+      const cells = line.split(/\s{2,}|\t/).map(c => c.trim()).filter(Boolean);
+      if (cells.length < 2) return;
+      const name = cells[0].replace(/\s*\b0\d\b\s*$/, '').trim();
+      if (!/[A-Za-z]{2}/.test(name) || skipName.test(name) || name.length > 60) return;
+      let value = '', flag = '', units = '', range = '';
+      let rest = cells.slice(1);
+      if (rest.length > 1 && /^0\d$/.test(rest[0])) rest = rest.slice(1); // Labcorp lab code like "01"
+      for (const c0 of rest) {
+        let c = c0;
+        const trailing = c.match(/^(.*\S)\s+(High|Low|H|L|HH|LL|A|Abnormal)$/i);
+        if (!value && trailing && valRe.test(trailing[1])) { value = trailing[1]; flag = flag || trailing[2]; continue; }
+        if (!value && valRe.test(c)) { value = c; continue; }
+        if (value && !flag && flagRe.test(c)) { flag = c; continue; }
+        if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(c)) continue; // previous-result date
+        if (value && !units && unitRe.test(c) && !rangeRe.test(c)) { units = c; continue; }
+        if (value && !range && rangeRe.test(c)) { range = c; continue; }
+      }
+      if (!value || (!units && !range)) return;
+      flag = flag ? ({ h: 'High', hh: 'Critical high', l: 'Low', ll: 'Critical low', a: 'Abnormal', aa: 'Critical' }[flag.toLowerCase()] || flag.charAt(0).toUpperCase() + flag.slice(1).toLowerCase()) : '';
+      if (!rows.some(r => r.name === name && r.value === value)) rows.push({ name, value, flag, units, range });
+    });
+    return rows;
+  }
+  // Lines like "Hemoglobin: 11.9 g/dL [L] (ref 13.0-17.7)" or "Glucose 104 H mg/dL 70-99"
+  function oneLineRow(line) {
+    const L = String(line).trim();
+    if (!L || L.length > 160) return null;
+    const m = L.match(/^([A-Za-z][A-Za-z0-9 ,()\/%.#+'-]*?[A-Za-z)%])\s*:?\s+((?:[<>]=?\s*)?-?\d[\d,]*(?:\.\d+)?)\s*(?:\[?(HH|LL|High|Low|H|L|A|AA|Abnormal)\]?)?\s*((?:x10E\d\/uL|10\*\d\/[A-Za-z]+|10\^\d\/[A-Za-z]+|[A-Za-z%µ][A-Za-z0-9%µ\/.^*]*?)(?=\s|$))?\s*(?:\[(HH|LL|H|L|A|AA|HU|LU)\])?\s*\(?\s*(?:ref(?:erence)?\s*(?:range|interval)?\s*:?\s*)?((?:[<>]=?\s*-?\d[\d.,]*)|(?:-?\d[\d.,]*\s*-\s*-?\d[\d.,]*))?\s*[A-Za-z0-9%\/.*^]*\)?\s*$/i);
+    if (!m) return null;
+    const name = m[1].replace(/\s*\b0\d\b$/, '').trim();
+    const units = (m[4] || '').trim(), range = (m[6] || '').trim();
+    if (/^(Page|Phone|Fax|Account|DOB|Age|Date|Patient|NPI|Zip|Suite|Apt)\b/i.test(name)) return null;
+    if (!units && !range) return null;
+    if (units && /^(High|Low|H|L|A|AA|HH|LL|Abnormal)$/i.test(units)) return null;
+    let flag = m[3] || m[5] || '';
+    flag = flag ? ({ h: 'High', hh: 'Critical high', l: 'Low', ll: 'Critical low', a: 'Abnormal', aa: 'Critical', hu: 'Very high', lu: 'Very low' }[flag.toLowerCase()] || flag.charAt(0).toUpperCase() + flag.slice(1).toLowerCase()) : '';
+    return { name, value: m[2].replace(/\s+/g, ''), flag, units, range };
+  }
+  // Use the parsed table first for the four charted counts (handles lab codes like "WBC 01 6.1").
+  function countsFromRows(rows) {
+    const out = {};
+    const pick = [
+      ['wbc', /^(WBC|White Blood Cells?|Leukocytes)\b/i],
+      ['anc', /^(Neutrophils?\s*\(Absolute\)|Neutrophils?,?\s*Abs|Absolute Neutrophils?|ANC)(?![A-Za-z])/i],
+      ['platelets', /^(Platelets?|PLT)\b(?!.*(Mean|Volume|Distrib))/i],
+      ['hemoglobin', /^(Hemoglobin|HGB|Hb)\b(?!.*(A1c|Glyc))/i],
+    ];
+    rows.forEach(r => pick.forEach(([k, re]) => {
+      if (out[k] !== undefined || !re.test(r.name)) return;
+      let v = parseFloat(String(r.value).replace(/[<>=,\s]/g, ''));
+      if (isNaN(v)) return;
+      if (k === 'wbc' && v > 200) v /= 1000;
+      if (k === 'anc' && v > 100) v /= 1000;
+      if (k === 'platelets' && v > 5000) v /= 1000;
+      out[k] = Math.round(v * 100) / 100;
+    }));
+    return out;
+  }
+
+  // Full-screen viewer for a saved original report
+  async function showPdf(id) {
+    const blob = await pdfFiles.get(id).catch(() => null);
+    if (!blob) { alert("The original file isn't on this device. It may have been added on another phone or before backups included files."); return; }
+    const wrap = document.createElement('div');
+    wrap.id = 'pdf-viewer';
+    wrap.innerHTML = '<div class="pv-bar"><span>Original report</span><button type="button">Close</button></div><div class="pv-pages"><p style="color:#fff">Opening…</p></div>';
+    document.body.appendChild(wrap);
+    document.body.classList.add('modal-open');
+    const closeV = () => { wrap.remove(); document.body.classList.remove('modal-open'); };
+    wrap.querySelector('button').addEventListener('click', closeV);
+    const pages = wrap.querySelector('.pv-pages');
+    try {
+      const lib = await loadPdfJs();
+      const pdf = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false }).promise;
+      pages.innerHTML = '';
+      for (let n = 1; n <= pdf.numPages; n++) {
+        const page = await pdf.getPage(n);
+        const vp = page.getViewport({ scale: 2 });
+        const cv = document.createElement('canvas');
+        cv.width = vp.width; cv.height = vp.height;
+        pages.appendChild(cv);
+        await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+      }
+    } catch (e) {
+      console.error('pdf view failed', e);
+      pages.innerHTML = '<p style="color:#fff">Couldn\'t show the report. Make sure you\'re online the first time you open one.</p>';
+    }
+  }
+  document.addEventListener('click', e => { const b = e.target.closest('.view-pdf'); if (b) showPdf(b.dataset.pdf); });
+
+  // Save a whole report as a Test result: every row + all the text (+ the original file).
+  async function saveFullReport({ text, rows, date, source, name, blob }) {
+    ensureCollection('testResults');
+    let pdfId = '';
+    if (blob) {
+      pdfId = 'pdf-' + Date.now();
+      try { await pdfFiles.put(pdfId, blob); } catch (e) { console.error('saving original failed', e); pdfId = ''; }
+    }
+    const title = (source ? source + ' ' : '') + 'lab report';
+    const rec = { id: store.nextIds.testResult++, date, type: 'Lab / bloodwork', description: title, orderedBy: '', followup: false,
+      result: text, rows, notes: 'Added from a shared or picked report', pdfId };
+    store.testResults.push(rec);
+    saveStore();
+    renderAll();
+    return rec;
+  }
+
+  function showToast(msg) {
+    let t = document.getElementById('mmh-toast');
+    if (!t) {
+      t = document.createElement('div'); t.id = 'mmh-toast'; t.setAttribute('role', 'status');
+      t.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom, 0px));z-index:9998;max-width:560px;margin:0 auto;background:#1f3d36;color:#fff;padding:12px 16px;border-radius:12px;font-size:0.92rem;line-height:1.4;box-shadow:0 6px 20px rgba(0,0,0,.25)';
+      t.addEventListener('click', () => { t.style.display = 'none'; });
+      document.body.appendChild(t);
+    }
+    t.textContent = msg; t.style.display = 'block';
+    clearTimeout(showToast._h); showToast._h = setTimeout(() => { t.style.display = 'none'; }, msg.length > 60 ? 8000 : 4000);
+  }
+
+  // ---------- lab report PDF reader (runs on this device) ----------
+  let pdfjsPromise = null;
+  function loadPdfJs() {
+    if (!pdfjsPromise) {
+      const base = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.6.205/legacy/build/';
+      pdfjsPromise = import(base + 'pdf.min.mjs').then(lib => { lib.GlobalWorkerOptions.workerSrc = base + 'pdf.worker.min.mjs'; return lib; })
+        .catch(e => { pdfjsPromise = null; throw e; });
+    }
+    return pdfjsPromise;
+  }
+  async function pdfToText(buf) {
+    const lib = await loadPdfJs();
+    const pdf = await lib.getDocument({ data: new Uint8Array(buf), isEvalSupported: false }).promise;
+    const lines = [];
+    for (let n = 1; n <= Math.min(pdf.numPages, 20); n++) {
+      const page = await pdf.getPage(n);
+      const content = await page.getTextContent();
+      const rows = [];
+      content.items.forEach(it => {
+        if (!it.str || !it.str.trim()) return;
+        const y = it.transform[5], x = it.transform[4];
+        let row = rows.find(r => Math.abs(r.y - y) < 3);
+        if (!row) { row = { y, items: [] }; rows.push(row); }
+        row.items.push({ x, s: it.str });
+      });
+      rows.sort((a, b) => b.y - a.y).forEach(r => lines.push(r.items.sort((a, b) => a.x - b.x).map(i => i.s.trim()).join('  ')));
+    }
+    return lines.join('\n');
+  }
+  function extractLabValues(text) {
+    const out = {};
+    const lines = String(text || '').split(/\r?\n/);
+    const num = '(\\d{1,3}(?:,\\d{3})*(?:\\.\\d+)?|\\.\\d+)';
+    const tests = [
+      ['wbc', new RegExp('\\b(?:WBC(?:\\s*COUNT)?|WHITE\\s+BLOOD\\s+CELLS?(?:\\s+COUNT)?|LEUKOCYTES)\\b[^\\d\\n]{0,30}?' + num, 'i')],
+      ['anc', new RegExp('\\b(?:NEUTROPHILS?\\s*\\(ABSOLUTE\\)|ABSOLUTE\\s+NEUTROPHILS?(?:\\s+COUNT)?|NEUTROPHILS?,?\\s*ABS(?:OLUTE)?|ABS\\s+NEUTROPHILS?|ANC)(?![A-Za-z])\\)?[^\\d\\n]{0,30}?' + num, 'i')],
+      ['platelets', new RegExp('\\b(?:PLATELETS?(?:\\s+COUNT)?|PLT)\\b(?!\\s*(?:MEAN|VOLUME|DISTRIB))[^\\d\\n]{0,30}?' + num, 'i')],
+      ['hemoglobin', new RegExp('\\b(?:HEMOGLOBIN|HGB|HB)\\b(?!\\s*A1C|\\s*A\\s*1\\s*C|\\s*,?\\s*(?:GLYC|FECAL|URINE))[^\\d\\n]{0,30}?' + num, 'i')],
+    ];
+    lines.forEach(line => {
+      tests.forEach(([key, re]) => {
+        if (out[key] !== undefined) return;
+        if (key === 'hemoglobin' && /A1C|GLYCATED|GLYCOHEMOGLOBIN|FECAL|OCCULT/i.test(line)) return;
+        const m = line.match(re);
+        if (!m) return;
+        let v = parseFloat(m[1].replace(/,/g, ''));
+        if (isNaN(v)) return;
+        if (key === 'wbc' && v > 200) v = v / 1000;
+        if (key === 'anc' && v > 100) v = v / 1000;
+        if (key === 'platelets' && v > 5000) v = v / 1000;
+        out[key] = Math.round(v * 100) / 100;
+      });
+    });
+    const toIso = (mo, d, y) => { y = y.length === 2 ? '20' + y : y; return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`; };
+    const dm = String(text).match(/(?:Date\s+Collected|Collection\s+Date|Collected(?:\s+Date)?|Specimen\s+Collected|Date\s+of\s+Service)[^\d\n]{0,20}(\d{1,2})\/(\d{1,2})\/(\d{2,4})/i)
+      || String(text).match(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/);
+    if (dm) out.date = toIso(dm[1], dm[2], dm[3]);
+    out.source = /lab\s*corp/i.test(text) ? 'Labcorp' : /quest\s+diagnostics/i.test(text) ? 'Quest' : '';
+    return out;
+  }
+  (function initLabPdf() {
+    const input = document.getElementById('labpdf-input');
+    const statusEl = document.getElementById('labpdf-status');
+    // Messages show on Home and as a pop-up note, so you see them from any page.
+    const status = { set textContent(m) { if (statusEl) statusEl.textContent = m; showToast(m); } };
+    if (!input) return;
+    const label = document.querySelector('label[for="labpdf-input"]');
+    if (label) label.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+    input.addEventListener('change', () => {
+      const file = input.files[0];
+      input.value = '';
+      if (file) handleLabFile(file);
+    });
+    async function handleLabFile(file) {
+      status.textContent = 'Reading your report…';
+      let text = '';
+      try {
+        text = await pdfToText(await file.arrayBuffer());
+      } catch (e) {
+        console.error('pdf read failed', e);
+        status.textContent = "Couldn't read that PDF. Make sure it's the lab report file itself, and that you're online the first time you use this. You can also copy the results and paste them in Add from email below.";
+        return;
+      }
+      if (!text.trim()) { status.textContent = "This PDF looks like a scanned picture, so there's no text to read. Type the numbers in with + Add under Log history / Lab work instead."; return; }
+      await finishReport(text, file.name.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' '), file);
+    }
+    async function finishReport(text, name, blob) {
+      const rows = parseLabRows(text);
+      const v = Object.assign(extractLabValues(text), countsFromRows(rows));
+      const date = v.date || todayIso();
+      await saveFullReport({ text, rows, date, source: v.source, name: /^(shared report|text)$/i.test(name || '') ? '' : name, blob });
+      const found = ['wbc', 'anc', 'platelets', 'hemoglobin'].filter(k => v[k] !== undefined);
+      const saved = `Saved the whole report${rows.length ? ` (${rows.length} results)` : ''} under My Health → Test results.`;
+      if (found.length) {
+        // Save the counts straight to the chart. Same date already there? Overwrite it instead of adding a duplicate.
+        ensureCollection('logs');
+        const note = `From ${v.source ? v.source + ' ' : ''}report (full report in Test results)`;
+        let entry = store.logs.find(l => l.date === date);
+        const replaced = !!entry;
+        if (!entry) { entry = { id: store.nextIds.log++, date, wbc: null, anc: null, platelets: null, hemoglobin: null, symptoms: '', notes: '' }; store.logs.push(entry); }
+        found.forEach(k => { entry[k] = v[k]; });
+        if (!replaced || !entry.notes) entry.notes = note;
+        saveStore();
+        renderAll();
+        status.textContent = `${saved} Blood counts ${replaced ? 'updated' : 'added'} for ${fmtDate(date)} (${found.map(k => ({ wbc: 'WBC', anc: 'ANC', platelets: 'Platelets', hemoglobin: 'Hgb' }[k])).join(', ')}). Tap Edit on it anytime to change something.`;
+      } else {
+        status.textContent = saved;
+      }
+    }
+    window.handleLabFile = handleLabFile;
+    window.handleLabText = function (text, name) {
+      if (!String(text || '').trim()) { status.textContent = "Something was shared, but it was empty."; return; }
+      finishReport(text, name || 'text', null);
+    };
+  })();
+
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // ---------- init ----------
+  renderCalendar();
+  renderHealthSummary();
+  { const erDate = document.getElementById('er-date'); if (erDate && !erDate.value) erDate.valueAsDate = new Date(); }
+  renderLogTable();
+  renderAppointments();
+  renderInsurance();
+  renderDoctors();
+  renderVisits();
+  renderSymptoms();
+  renderMedications();
+  renderCaseManagers();
+  renderPharmacies();
+  renderSupportContacts();
+  renderDirectory();
+  renderTestResults();
+  renderRecentResults();
+  renderFaqLists();
+  renderMyQuestions();
+  renderQuickLinks();
+  renderDueToday();
+  showCommunityList();
+})();
+</script>
+<script>
+  // Installable app + "Share to My Med Hub"
+  if ('serviceWorker' in navigator && location.protocol === 'https:' && !/claude\.ai|claudeusercontent/.test(location.hostname)) {
+    navigator.serviceWorker.register('sw.js').catch(e => console.error('sw register failed', e));
+  }
+  (async function pickUpShared() {
+    const params = new URLSearchParams(location.search);
+    if (!params.has('shared') || !('caches' in window)) return;
+    history.replaceState(null, '', location.pathname);
+    try {
+      const cache = await caches.open('mmh-shared');
+      const goHome = () => { const b = document.querySelector('.tab-btn[data-view="home"]'); if (b) b.click(); const p = document.getElementById('labpdf-panel'); if (p) p.scrollIntoView({ behavior: 'smooth' }); };
+      const fileRes = await cache.match('shared-file');
+      const textRes = await cache.match('shared-text');
+      await cache.delete('shared-file'); await cache.delete('shared-text');
+      goHome();
+      if (fileRes && window.handleLabFile) {
+        const blob = await fileRes.blob();
+        const name = decodeURIComponent(fileRes.headers.get('X-File-Name') || 'shared-report.pdf');
+        window.handleLabFile(new File([blob], name, { type: blob.type || 'application/pdf' }));
+      } else if (textRes && window.handleLabText) {
+        window.handleLabText(await textRes.text(), 'text');
+      } else {
+        const st = document.getElementById('labpdf-status');
+        if (st) st.textContent = "Something was shared, but no PDF came through. Try sharing again, or use Choose lab report PDF.";
+      }
+    } catch (e) { console.error('shared pickup failed', e); }
+  })();
+</script>
+</body>
+</html>
